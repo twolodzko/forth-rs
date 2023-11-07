@@ -1,7 +1,10 @@
 use crate::errors::Error::StackUnderflow;
-use crate::forth::{Forth, ForthResult, Word, Word::*};
+use crate::forth::{
+    Definition::{self, Callable, Constant},
+    Forth, ForthResult,
+};
 
-const BUILDINS: &[(&str, Word)] = &[
+const BUILDINS: &[(&str, Definition)] = &[
     // constants
     ("true", Constant(-1)),
     ("false", Constant(0)),

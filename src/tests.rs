@@ -1,11 +1,11 @@
 use crate::errors::Error::{self, StackUnderflow};
-use crate::forth::{Forth, Int};
+use crate::forth::{Definition, Forth, Int};
 use test_case::test_case;
 
-#[test_case("true", &[], &[-1]; "true word")]
-#[test_case("false", &[], &[0]; "false word")]
 #[test_case("0", &[], &[0]; "zero")]
 #[test_case("42", &[], &[42]; "number")]
+#[test_case("true", &[], &[-1]; "true word")]
+#[test_case("false", &[], &[0]; "false word")]
 #[test_case("+", &[2, 2], &[4]; "simple add")]
 #[test_case("swap", &[1, 2], &[2, 1]; "simple swap")]
 #[test_case("swap", &[1, 2, 3, 4], &[1, 2, 4, 3]; "swap with multiple elements on stack")]
@@ -29,4 +29,21 @@ fn execute_unhappy_paths(word: &str, init_stack: &[Int], error_message: Error) {
     forth.stack = init_stack.to_vec();
 
     assert_eq!(Err(error_message), forth.execute(word));
+}
+
+#[test]
+fn simple_function() {
+    use crate::custom::Function;
+    let mut forth = Forth::new(10);
+
+    // : add2 2 + ;
+    forth.dictionary.insert(
+        "add2".to_string(),
+        Definition::Function(Function::new(&["2", "+"])),
+    );
+    // 3 add2
+    forth.stack = vec![3];
+    forth.execute("add2").expect("failed to execute");
+
+    assert_eq!(vec![5], forth.stack);
 }
