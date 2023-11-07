@@ -1,10 +1,16 @@
-use crate::errors::Error;
+use crate::errors::Error::{self, StackUnderflow};
 use crate::forth::{Forth, Int};
 use test_case::test_case;
 
+#[test_case("true", &[], &[-1]; "true word")]
+#[test_case("false", &[], &[0]; "false word")]
 #[test_case("0", &[], &[0]; "zero")]
 #[test_case("42", &[], &[42]; "number")]
 #[test_case("+", &[2, 2], &[4]; "simple add")]
+#[test_case("swap", &[1, 2], &[2, 1]; "simple swap")]
+#[test_case("swap", &[1, 2, 3, 4], &[1, 2, 4, 3]; "swap with multiple elements on stack")]
+#[test_case("dup", &[1, 2], &[1, 2, 2]; "dup")]
+#[test_case("drop", &[1, 2, 3, 4], &[1, 2, 3]; "drop")]
 fn execute_happy_paths(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
     let mut forth = Forth::new(10);
     forth.stack = init_stack.to_vec();
@@ -13,8 +19,11 @@ fn execute_happy_paths(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
     assert_eq!(expected_stack, forth.stack);
 }
 
-#[test_case("+", &[], Error::StackUnderflow; "add with empty stack")]
-#[test_case("+", &[2], Error::StackUnderflow; "add with one value on stack")]
+#[test_case("+", &[], StackUnderflow; "add with empty stack")]
+#[test_case("+", &[2], StackUnderflow; "add with one value on stack")]
+#[test_case("swap", &[], StackUnderflow; "swap with empty stack")]
+#[test_case("dup", &[], StackUnderflow; "dup with empty stack")]
+#[test_case("drop", &[], StackUnderflow; "drop with empty stack")]
 fn execute_unhappy_paths(word: &str, init_stack: &[Int], error_message: Error) {
     let mut forth = Forth::new(10);
     forth.stack = init_stack.to_vec();
