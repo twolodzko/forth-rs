@@ -1,7 +1,7 @@
 use crate::errors::Error::StackUnderflow;
-use crate::forth::{
+use crate::memory::{
     Definition::{self, Callable, Constant},
-    Forth, ForthResult,
+    ForthResult, Memory,
 };
 
 const BUILDINS: &[(&str, Definition)] = &[
@@ -16,11 +16,11 @@ const BUILDINS: &[(&str, Definition)] = &[
     ("swap", Callable(swap)),
 ];
 
-impl Forth {
+impl Memory {
     /// Constructs a new, empty Forth server with the stack with at least the specified capacity and
     /// a dictionary of predefined words.
     pub fn new(capacity: usize) -> Self {
-        let mut forth = Forth::with_capacity(capacity);
+        let mut forth = Memory::with_capacity(capacity);
         for (key, val) in BUILDINS {
             forth.dictionary.insert(key.to_string(), val.clone());
         }
@@ -29,7 +29,7 @@ impl Forth {
 }
 
 /// `+ (a b -- c)`
-fn add(forth: &mut Forth) -> ForthResult {
+fn add(forth: &mut Memory) -> ForthResult {
     let a = forth.pop()?;
     let b = forth.pop()?;
     forth.stack.push(a.saturating_add(b));
@@ -37,13 +37,13 @@ fn add(forth: &mut Forth) -> ForthResult {
 }
 
 /// `cr (--)`
-fn cr(_: &mut Forth) -> ForthResult {
+fn cr(_: &mut Memory) -> ForthResult {
     println!();
     Ok(())
 }
 
 /// `swap (a b -- b a)`
-fn swap(forth: &mut Forth) -> ForthResult {
+fn swap(forth: &mut Memory) -> ForthResult {
     let n = forth.stack.len();
     if n < 2 {
         return Err(StackUnderflow);
@@ -53,7 +53,7 @@ fn swap(forth: &mut Forth) -> ForthResult {
 }
 
 /// `dup (a -- a a)`
-fn dup(forth: &mut Forth) -> ForthResult {
+fn dup(forth: &mut Memory) -> ForthResult {
     if let Some(val) = forth.stack.last() {
         forth.push(*val);
         Ok(())
@@ -63,7 +63,7 @@ fn dup(forth: &mut Forth) -> ForthResult {
 }
 
 /// `drop (a --)`
-fn drop(forth: &mut Forth) -> ForthResult {
+fn drop(forth: &mut Memory) -> ForthResult {
     forth.pop()?;
     Ok(())
 }

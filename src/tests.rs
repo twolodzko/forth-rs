@@ -1,5 +1,5 @@
 use crate::errors::Error::{self, StackUnderflow};
-use crate::forth::{Definition, Forth, Int};
+use crate::memory::{Definition, Int, Memory};
 use test_case::test_case;
 
 #[test_case("0", &[], &[0]; "zero")]
@@ -12,7 +12,7 @@ use test_case::test_case;
 #[test_case("dup", &[1, 2], &[1, 2, 2]; "dup")]
 #[test_case("drop", &[1, 2, 3, 4], &[1, 2, 3]; "drop")]
 fn execute_happy_paths(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
-    let mut forth = Forth::new(10);
+    let mut forth = Memory::new(10);
     forth.stack = init_stack.to_vec();
 
     forth.execute(word).expect("failed to execute");
@@ -25,7 +25,7 @@ fn execute_happy_paths(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
 #[test_case("dup", &[], StackUnderflow; "dup with empty stack")]
 #[test_case("drop", &[], StackUnderflow; "drop with empty stack")]
 fn execute_unhappy_paths(word: &str, init_stack: &[Int], error_message: Error) {
-    let mut forth = Forth::new(10);
+    let mut forth = Memory::new(10);
     forth.stack = init_stack.to_vec();
 
     assert_eq!(Err(error_message), forth.execute(word));
@@ -33,8 +33,8 @@ fn execute_unhappy_paths(word: &str, init_stack: &[Int], error_message: Error) {
 
 #[test]
 fn simple_function() {
-    use crate::custom::Function;
-    let mut forth = Forth::new(10);
+    use crate::special::Function;
+    let mut forth = Memory::new(10);
 
     // : add2 2 + ;
     forth.dictionary.insert(

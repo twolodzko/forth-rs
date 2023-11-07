@@ -1,61 +1,37 @@
 use crate::errors::Error::{self, StackUnderflow, UnknownWord};
-use crate::special::{Function, IfThenElse};
+use crate::special::*;
 use std::collections::HashMap;
-use std::str::Chars;
 
 pub type Int = i32;
+pub type ForthResult = Result<(), Error>;
 
 #[allow(dead_code)] // FIXME
 #[derive(Clone)]
 pub enum Definition {
     Variable(Int),
     Constant(Int),
-    Callable(fn(forth: &mut Forth) -> Result<(), Error>),
+    Callable(fn(forth: &mut Memory) -> ForthResult),
     Function(Function),
     IfThenElse(IfThenElse),
 }
 
-pub struct Forth {
-    buffer: String,
-    buffer_position: usize,
-    stack: Vec<Int>,
-    dictionary: HashMap<String, Definition>,
+pub struct Memory {
+    pub stack: Vec<Int>,
+    pub(crate) dictionary: HashMap<String, Definition>,
 }
 
-impl Forth {
-    pub fn new(capacity: usize) -> Self {
+impl Memory {
+    /// Constructs a new, empty Forth server with the stack with at least the specified capacity.
+    pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
-            buffer: String::new(),
-            buffer_position: 0,
             stack: Vec::with_capacity(capacity),
             dictionary: HashMap::new(),
         }
     }
 
-    pub fn eval(&mut self, buffer: &str) -> Result<(), Error> {
-        let start: usize;
-        let end: usize;
-        let mut chars = buffer.chars();
-
-        // skip leading spaces
-        for c in &mut chars {
-            if c.is_whitespace() {
-                break;
-            }
-        }
-
-        match read_word(&mut chars).expect("nothing was read").as_ref() {
-            ":" => unimplemented!(),
-            ".\"" => unimplemented!(),
-            ".(" => unimplemented!(),
-            word => {}
-        }
-        Ok(())
-    }
-
     /// Execute the word. If the word does not exist in the dictionary, try parsing it as a number and pushing
     /// it into the stack.
-    pub fn execute(&mut self, word: &str) -> Result<(), Error> {
+    pub fn execute(&mut self, word: &str) -> ForthResult {
         use self::Definition::*;
         match self.dictionary.get(word) {
             Some(Callable(callable)) => callable(self),
@@ -76,6 +52,13 @@ impl Forth {
         }
     }
 
+    pub fn execute_many(&mut self, words: &[String]) -> ForthResult {
+        for word in words.iter() {
+            self.execute(word)?;
+        }
+        Ok(())
+    }
+
     /// Push value to the stack
     pub(crate) fn push(&mut self, value: Int) {
         self.stack.push(value);
@@ -85,18 +68,4 @@ impl Forth {
     pub(crate) fn pop(&mut self) -> Result<Int, Error> {
         self.stack.pop().ok_or(StackUnderflow)
     }
-}
-
-fn read_word(chars: &mut Chars<'_>) -> Option<String> {
-    let mut word = String::new();
-    for c in chars {
-        if c.is_whitespace() {
-            break;
-        }
-        word.push(c);
-    }
-    if word.is_empty() {
-        return None;
-    }
-    Some(word)
 }
