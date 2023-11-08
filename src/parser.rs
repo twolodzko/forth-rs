@@ -1,4 +1,7 @@
-use crate::expressions::{self, Expr, IfThenElse};
+use crate::expressions::{
+    imp,
+    Expr::{self, IfThenElse, NewConstant, NewFunction, NewVariable, Print, Word},
+};
 use std::{iter::Peekable, str::Chars};
 
 pub struct Reader<'a>(Peekable<Chars<'a>>);
@@ -69,7 +72,7 @@ impl<'a> Parser<'a> {
 
         let body = self
             .take_while(|expr| {
-                if let Expr::Word(word) = expr {
+                if let Word(word) = expr {
                     word != ";"
                 } else {
                     true
@@ -77,9 +80,9 @@ impl<'a> Parser<'a> {
             })
             .collect();
 
-        let func = expressions::Function { body };
+        let func = imp::Function { body };
 
-        Some(Expr::NewFunction(name, func))
+        Some(NewFunction(name, func))
     }
 
     fn read_ite(&mut self) -> Option<Expr> {
@@ -87,7 +90,7 @@ impl<'a> Parser<'a> {
         let mut then = Vec::new();
 
         for ref expr in self.by_ref() {
-            if let Expr::Word(word) = expr {
+            if let Word(word) = expr {
                 match word.as_str() {
                     "then" => {
                         then = acc.clone();
@@ -101,7 +104,7 @@ impl<'a> Parser<'a> {
         }
         let other = acc.clone();
 
-        Some(Expr::IfThenElse(IfThenElse { then, other }))
+        Some(IfThenElse(imp::IfThenElse { then, other }))
     }
 }
 
@@ -109,8 +112,6 @@ impl<'a> Iterator for Parser<'a> {
     type Item = Expr;
 
     fn next(&mut self) -> Option<Self::Item> {
-        use Expr::{NewConstant, NewVariable, Print, Word};
-
         // skip leading spaces
         self.skip_whitespaces();
 

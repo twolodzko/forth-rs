@@ -10,9 +10,9 @@ pub enum Expr {
     Word(String),
     Print(String),
     Callable(fn(forth: &mut Forth) -> Result<(), Error>),
-    NewFunction(String, Function),
-    Function(Function),
-    IfThenElse(IfThenElse),
+    NewFunction(String, imp::Function),
+    Function(imp::Function),
+    IfThenElse(imp::IfThenElse),
     NewConstant(String),
     Constant(Int),
     NewVariable(String),
@@ -64,39 +64,44 @@ impl Expr {
     }
 }
 
-#[inline]
-fn execute_many(forth: &mut Forth, body: &[Expr]) -> Result<(), Error> {
-    for obj in body {
-        obj.execute(forth)?;
-    }
-    Ok(())
-}
+pub mod imp {
+    use super::Expr;
+    use crate::{errors::Error, forth::Forth};
 
-#[derive(Clone)]
-pub struct Function {
-    pub body: Vec<Expr>,
-}
-
-impl Function {
     #[inline]
-    pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
-        execute_many(forth, &self.body)
+    fn execute_many(forth: &mut Forth, body: &[Expr]) -> Result<(), Error> {
+        for obj in body {
+            obj.execute(forth)?;
+        }
+        Ok(())
     }
-}
 
-#[derive(Clone)]
-pub struct IfThenElse {
-    pub then: Vec<Expr>,
-    pub other: Vec<Expr>,
-}
+    #[derive(Clone)]
+    pub struct Function {
+        pub body: Vec<Expr>,
+    }
 
-impl IfThenElse {
-    #[inline]
-    pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
-        if forth.pop()? != 0 {
-            execute_many(forth, &self.then)
-        } else {
-            execute_many(forth, &self.other)
+    impl Function {
+        #[inline]
+        pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
+            execute_many(forth, &self.body)
+        }
+    }
+
+    #[derive(Clone)]
+    pub struct IfThenElse {
+        pub then: Vec<Expr>,
+        pub other: Vec<Expr>,
+    }
+
+    impl IfThenElse {
+        #[inline]
+        pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
+            if forth.pop()? != 0 {
+                execute_many(forth, &self.then)
+            } else {
+                execute_many(forth, &self.other)
+            }
         }
     }
 }
