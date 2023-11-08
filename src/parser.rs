@@ -1,11 +1,26 @@
 use crate::expressions::{self, Expr};
 use std::{iter::Peekable, str::Chars};
 
-pub type Reader<'a> = Peekable<Chars<'a>>;
+pub struct Reader<'a>(Peekable<Chars<'a>>);
 
-#[inline]
-pub fn new_reader(string: &str) -> Reader {
-    string.chars().peekable()
+impl<'a> Reader<'a> {
+    #[inline]
+    pub fn new(string: &'a str) -> Self {
+        Self(string.chars().peekable())
+    }
+
+    #[inline]
+    pub fn peek(&mut self) -> Option<&char> {
+        self.0.peek()
+    }
+}
+
+impl<'a> Iterator for Reader<'a> {
+    type Item = char;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
 }
 
 #[inline]
