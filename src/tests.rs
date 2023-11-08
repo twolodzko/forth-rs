@@ -14,11 +14,11 @@ use test_case::test_case;
 #[test_case("swap", &[1, 2, 3, 4], &[1, 2, 4, 3]; "swap with multiple elements on stack")]
 #[test_case("dup", &[1, 2], &[1, 2, 2]; "dup")]
 #[test_case("drop", &[1, 2, 3, 4], &[1, 2, 3]; "drop")]
-fn eval_word_happy_path(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
+fn eval_happy_path(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
     let mut forth = Forth::new(10);
     forth.stack = init_stack.to_vec();
 
-    forth.eval_word(word).expect("failed to execute");
+    forth.eval_string(word).expect("failed to execute");
     assert_eq!(expected_stack, forth.stack);
 }
 
@@ -30,11 +30,11 @@ fn eval_word_happy_path(word: &str, init_stack: &[Int], expected_stack: &[Int]) 
 // #[test_case("if", &[], CompileOnlyWord(String::from("if")); "if outside of compile")]
 // #[test_case("do", &[], CompileOnlyWord(String::from("do")); "do outside of compile")]
 // #[test_case("begin", &[], CompileOnlyWord(String::from("begin")); "begin outside of compile")]
-fn eval_word_unhappy_path(word: &str, init_stack: &[Int], error_message: Error) {
+fn eval_unhappy_path(word: &str, init_stack: &[Int], error_message: Error) {
     let mut forth = Forth::new(10);
     forth.stack = init_stack.to_vec();
 
-    assert_eq!(Err(error_message), forth.eval_word(word));
+    assert_eq!(Err(error_message), forth.eval_string(word));
 }
 
 // #[test]

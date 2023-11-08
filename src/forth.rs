@@ -1,5 +1,5 @@
 use crate::{
-    errors::Error::{self, Redefined, StackUnderflow, UnknownWord},
+    errors::Error::{self, Redefined, StackUnderflow},
     executables::{Executable, Int},
     reader::{next, Reader},
 };
@@ -20,39 +20,23 @@ impl Forth {
         }
     }
 
-    /// Execute the word. If the word does not exist in the dictionary, try parsing it as a number and pushing
-    /// it into the stack.
-    pub(crate) fn eval_word(&mut self, word: &str) -> Result<(), Error> {
-        match self.get_word(word) {
-            Some(compiled) => compiled.execute(self),
-            None => {
-                if let Ok(num) = word.parse::<Int>() {
-                    self.push(num);
-                    Ok(())
-                } else {
-                    Err(UnknownWord(word.to_string()))
-                }
-            }
-        }
-        .map_err(|err| {
-            // clear stack on error
-            self.stack.clear();
-            err
-        })
-    }
-
     /// Evaluate a string
     pub fn eval_string(&mut self, string: &str) -> Result<(), Error> {
         let chars = &mut string.chars().peekable();
-        while let Some(result) = self.eval_next_word(chars) {
-            result?;
+        while let Some(result) = self.eval_next(chars) {
+            result.map_err(|err| {
+                // clear stack on error
+                self.stack.clear();
+                err
+            })?;
         }
         Ok(())
     }
 
     /// Go to next word and evaluate it
-    pub(crate) fn eval_next_word(&mut self, chars: &mut Reader) -> Option<Result<(), Error>> {
-        Some(next(chars)?.execute(self))
+    pub(crate) fn eval_next(&mut self, chars: &mut Reader) -> Option<Result<(), Error>> {
+        let executable = next(chars)?;
+        Some(executable.execute(self))
     }
 
     /// Push value to the stack.

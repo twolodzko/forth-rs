@@ -25,7 +25,17 @@ impl Executable {
     pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
         use Executable::*;
         match self {
-            Word(word) => forth.eval_word(word),
+            Word(word) => match forth.get_word(word) {
+                Some(compiled) => compiled.execute(forth),
+                None => {
+                    if let Ok(num) = word.parse::<Int>() {
+                        forth.push(num);
+                        Ok(())
+                    } else {
+                        Err(Error::UnknownWord(word.to_string()))
+                    }
+                }
+            },
             Integer(val) => {
                 forth.push(*val);
                 Ok(())
