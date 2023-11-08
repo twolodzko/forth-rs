@@ -2,7 +2,7 @@ mod buildins;
 mod errors;
 mod expressions;
 mod forth;
-mod reader;
+mod parser;
 
 pub use crate::errors::Error;
 pub use crate::forth::Forth;

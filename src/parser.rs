@@ -4,6 +4,11 @@ use std::{iter::Peekable, str::Chars};
 pub type Reader<'a> = Peekable<Chars<'a>>;
 
 #[inline]
+pub fn new_reader(string: &str) -> Reader {
+    string.chars().peekable()
+}
+
+#[inline]
 fn skip_whitespaces(chars: &mut Reader) {
     while let Some(c) = chars.peek() {
         if !c.is_whitespace() {

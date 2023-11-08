@@ -1,7 +1,7 @@
 use crate::{
     errors::Error::{self, Redefined, StackUnderflow},
     expressions::{Expr, Int},
-    reader::{next, Reader},
+    parser::{self, new_reader, Reader},
 };
 use std::collections::HashMap;
 
@@ -22,8 +22,8 @@ impl Forth {
 
     /// Evaluate a string
     pub fn eval_string(&mut self, string: &str) -> Result<(), Error> {
-        let chars = &mut string.chars().peekable();
-        while let Some(result) = self.eval_next(chars) {
+        let reader = &mut new_reader(string);
+        while let Some(result) = self.eval_next(reader) {
             result.map_err(|err| {
                 // clear stack on error
                 self.stack.clear();
@@ -34,8 +34,8 @@ impl Forth {
     }
 
     /// Go to next word and evaluate it
-    pub(crate) fn eval_next(&mut self, chars: &mut Reader) -> Option<Result<(), Error>> {
-        let expr = next(chars)?;
+    pub(crate) fn eval_next(&mut self, reader: &mut Reader) -> Option<Result<(), Error>> {
+        let expr = parser::next(reader)?;
         Some(expr.execute(self))
     }
 
