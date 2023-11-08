@@ -12,8 +12,8 @@ impl Display for Error {
         use Error::*;
         let msg = match self {
             StackUnderflow => "stack underflow".to_string(),
-            UnknownWord(word) => format!("unknown word: {}", word),
-            CompileOnlyWord(word) => format!("this is a compile-only word: {}", word),
+            UnknownWord(word) => format!("{} is an unknown word", word),
+            CompileOnlyWord(word) => format!("{} is a compile-only word", word),
         };
         write!(f, "{}", msg)
     }
