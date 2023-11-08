@@ -1,13 +1,13 @@
 use crate::{
     errors::Error::{self, StackUnderflow},
-    forth::Forth,
-    objects::{
+    executables::{
+        Executable::{self, Callable, CompileOnly, Constant},
         Int,
-        Object::{self, Callable, CompileOnly, Constant},
     },
+    forth::Forth,
 };
 
-const BUILDINS: &[(&str, Object)] = &[
+const BUILDINS: &[(&str, Executable)] = &[
     // constants
     ("true", Constant(-1)),
     ("false", Constant(0)),

@@ -1,8 +1,6 @@
 use crate::{
-    compiler::compile_function,
-    objects::Object,
-    Error::{self, ParsingError},
-    Forth,
+    executables::{self, Executable},
+    Error, Forth,
 };
 use std::{iter::Peekable, str::Chars};
 
@@ -50,73 +48,77 @@ fn read_word(chars: &mut Reader) -> String {
     word
 }
 
-fn read_function(chars: &mut Reader) -> Vec<String> {
-    let mut body = Vec::new();
-    loop {
-        let word = read_word(chars);
-        match word.as_str() {
-            ";" => break,
-            _ => body.push(word),
+// fn read_function(chars: &mut Reader) -> Option<(String, executables::Function)> {
+//     let name = read_word(chars);
+//     if name.is_empty() {
+//         return None;
+//     }
+
+//     while let Some(expr) = next(chars) {
+//         if let Executable::Word(word) = expr {
+//             match word.as_str() {
+//                 ";" => break,
+//                 _ => (), // FIXME
+//             }
+//         }
+//     }
+
+//     Some((name, _))
+// }
+
+// TODO
+#[allow(dead_code)]
+fn next(chars: &mut Reader) -> Option<Executable> {
+    // skip leading spaces
+    skip_whitespaces(chars);
+
+    let word = read_word(chars);
+    match word.as_str() {
+        // end of input
+        "" => None,
+        // skip comments
+        "(" => {
+            skip_until(chars, ')');
+            next(chars)
         }
+        "\\" => {
+            skip_until(chars, '\n');
+            next(chars)
+        }
+        // strings
+        ".\"" => {
+            let string = read_until(chars, '"');
+            Some(Executable::String(string))
+        }
+        // bindings:
+        ":" => {
+            // FIXME
+            skip_whitespaces(chars);
+            // let words = read_function(chars);
+            // let (name, _func) = compile_function(&mut words.iter())?;
+            let name = "<FIXME>".to_string();
+            let body = Vec::new();
+            Some(Executable::NewFunction(
+                name,
+                executables::Function { body },
+            ))
+        }
+        "variable" => {
+            let name = read_word(chars);
+            Some(Executable::NewVariable(name))
+        }
+        "constant" => {
+            let name = read_word(chars);
+            Some(Executable::NewConstant(name))
+        }
+        // other words:
+        word => Some(Executable::Word(word.to_string())),
     }
-    body
 }
 
 impl Forth {
     /// Go to next word and evaluate it
     pub(crate) fn eval_next_word(&mut self, chars: &mut Reader) -> Option<Result<(), Error>> {
-        // skip leading spaces
-        skip_whitespaces(chars);
-
-        let word = read_word(chars);
-        let result = match word.as_str() {
-            // end of input
-            "" => return None,
-            // comments
-            "(" => {
-                skip_until(chars, ')');
-                return self.eval_next_word(chars);
-            }
-            "\\" => {
-                skip_until(chars, '\n');
-                return self.eval_next_word(chars);
-            }
-            // strings
-            ".\"" | ".(" => {
-                // FIXME
-                print!("{}", read_until(chars, '"'));
-                Ok(())
-            }
-            // bindings:
-            ":" => {
-                skip_whitespaces(chars);
-                let words = read_function(chars);
-                let (name, func) = compile_function(&mut words.iter())?;
-                self.define_word(&name, func)
-            }
-            "variable" => {
-                let name = read_word(chars);
-                if name.is_empty() {
-                    Err(ParsingError)
-                } else {
-                    let value = Object::Variable(0);
-                    self.define_word(&name, value)
-                }
-            }
-            "constant" => {
-                let name = read_word(chars);
-                if name.is_empty() {
-                    Err(ParsingError)
-                } else {
-                    self.pop().and_then(|value| {
-                        let value = Object::Constant(value);
-                        self.define_word(&name, value)
-                    })
-                }
-            }
-            // other words:
-            word => self.eval_word(word),
-        };
-        Some(result)
+        Some(next(chars)?.execute(self))
     }
 }
