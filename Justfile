@@ -4,3 +4,6 @@ test:
 
 docs:
     cargo doc --no-deps --open
+
+repl:
+    cargo run --

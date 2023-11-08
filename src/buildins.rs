@@ -16,6 +16,7 @@ const BUILDINS: &[(&str, Compiled)] = &[
     ("swap", Callable(swap)),
     (".s", Callable(print_stack)),
     ("words", Callable(words)),
+    (".", Callable(dot)),
 ];
 
 impl Forth {
@@ -82,7 +83,7 @@ fn print_stack(forth: &mut Forth) -> Result<(), Error> {
         .join(" ");
     let n = forth.stack.len();
     let dots = if n > show_max { "..." } else { "" };
-    print!("<{}> {}{}", forth.stack.len(), stack, dots);
+    print!("<{}> {}{} ", forth.stack.len(), stack, dots);
     Ok(())
 }
 
@@ -94,6 +95,12 @@ fn words(forth: &mut Forth) -> Result<(), Error> {
         .map(|s| &**s)
         .collect::<Vec<_>>()
         .join(" ");
-    print!("{}", words);
+    print!("{} ", words);
+    Ok(())
+}
+
+/// `. (-- a)`
+fn dot(forth: &mut Forth) -> Result<(), Error> {
+    print!("{} ", forth.pop()?);
     Ok(())
 }

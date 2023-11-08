@@ -2,6 +2,7 @@ use crate::{errors::Error, forth::Forth};
 
 pub type Int = i32;
 
+/// The compiled objects.
 #[allow(dead_code)] // FIXME
 #[derive(Clone)]
 pub enum Compiled {
@@ -21,7 +22,7 @@ impl Compiled {
         use Compiled::{Callable, Constant, Function, IfThenElse, Variable, Word};
         match self {
             Callable(exec) => exec(forth),
-            Word(word) => forth.eval(word),
+            Word(word) => forth.eval_word(word),
             Function(func) => func.execute(forth),
             IfThenElse(body) => body.execute(forth),
             Constant(val) => {

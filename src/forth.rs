@@ -3,14 +3,16 @@ use crate::{
     errors::Error::{self, CompileOnlyWord, StackUnderflow, UnknownWord},
     reader::{read, Parsed},
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, iter::Peekable, str::Chars};
 
+/// The Forth interpreter that walks over the code and executes it
 pub struct Forth {
     pub stack: Vec<Int>,
     pub(crate) dictionary: HashMap<String, Compiled>,
 }
 
 impl Forth {
+    /// Constructs a new, empty Forth server with the stack with at least the specified capacity.
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             stack: Vec::with_capacity(capacity),
@@ -18,26 +20,10 @@ impl Forth {
         }
     }
 
-    #[allow(dead_code)] // FIXME
-    fn next(&mut self, buffer: &str) -> Result<(), Error> {
-        use Parsed::{Binding, ToPrint, Word};
-        let mut chars = buffer.chars();
-        match read(&mut chars).expect("nothing was read") {
-            Word(ref word) => self.eval(word),
-            Binding((name, compiled)) => {
-                self.dictionary.insert(name, compiled);
-                Ok(())
-            }
-            ToPrint(string) => {
-                print!("{}", string);
-                Ok(())
-            }
-        }
-    }
-
     /// Execute the word. If the word does not exist in the dictionary, try parsing it as a number and pushing
     /// it into the stack.
-    pub fn eval(&mut self, word: &str) -> Result<(), Error> {
+    pub(crate) fn eval_word(&mut self, word: &str) -> Result<(), Error> {
+        // those should not be evaluated
         if matches!(word, "if" | "do" | "begin") {
             return Err(CompileOnlyWord(word.to_string()));
         }
@@ -53,6 +39,30 @@ impl Forth {
                 }
             }
         }
+    }
+
+    fn next(&mut self, chars: &mut Peekable<Chars<'_>>) -> Option<Result<(), Error>> {
+        use Parsed::{Binding, ToPrint, Word};
+        let result = match read(chars)? {
+            Word(ref word) => self.eval_word(word),
+            Binding((name, compiled)) => {
+                self.dictionary.insert(name, compiled);
+                Ok(())
+            }
+            ToPrint(string) => {
+                print!("{} ", string);
+                Ok(())
+            }
+        };
+        Some(result)
+    }
+
+    pub fn eval_string(&mut self, string: &str) -> Result<(), Error> {
+        let chars = &mut string.chars().peekable();
+        while let Some(result) = self.next(chars) {
+            result?;
+        }
+        Ok(())
     }
 
     /// Push value to the stack

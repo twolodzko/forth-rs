@@ -1,5 +1,6 @@
 mod buildins;
 mod compiled;
+mod compiler;
 mod errors;
 mod forth;
 mod reader;
