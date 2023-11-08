@@ -64,6 +64,7 @@ impl Expr {
     }
 }
 
+#[inline]
 fn execute_many(forth: &mut Forth, body: &[Expr]) -> Result<(), Error> {
     for obj in body {
         obj.execute(forth)?;
@@ -77,6 +78,7 @@ pub struct Function {
 }
 
 impl Function {
+    #[inline]
     pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
         execute_many(forth, &self.body)
     }
@@ -89,6 +91,7 @@ pub struct IfThenElse {
 }
 
 impl IfThenElse {
+    #[inline]
     pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
         if forth.pop()? != 0 {
             execute_many(forth, &self.then)

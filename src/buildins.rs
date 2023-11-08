@@ -21,7 +21,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("emit", Callable(emit)),
     (".s", Callable(print_stack)),
     ("words", Callable(words)),
-    // compile-only words
+    // compile-only words and the words handled specially by parser
     ("if", Dummy),
     ("then", Dummy),
     ("else", Dummy),
@@ -46,7 +46,9 @@ impl Forth {
     pub fn new(capacity: usize) -> Self {
         let mut forth = Forth::with_capacity(capacity);
         for (key, val) in BUILDINS {
-            let _ = forth.define_word(key, val.clone());
+            forth
+                .define_word(key, val.clone())
+                .expect("there should be no duplicate definitions");
         }
         forth
     }

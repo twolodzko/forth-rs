@@ -5,11 +5,6 @@ pub struct Reader<'a>(Peekable<Chars<'a>>);
 
 impl<'a> Reader<'a> {
     #[inline]
-    pub fn new(string: &'a str) -> Self {
-        Self(string.chars().peekable())
-    }
-
-    #[inline]
     pub fn peek(&mut self) -> Option<&char> {
         self.0.peek()
     }
@@ -24,129 +19,144 @@ impl<'a> Iterator for Reader<'a> {
     }
 }
 
-#[inline]
-fn skip_whitespaces(chars: &mut Reader) {
-    while let Some(c) = chars.peek() {
-        if !c.is_whitespace() {
-            break;
-        }
-        chars.next();
+impl<'a> From<&'a str> for Reader<'a> {
+    fn from(value: &'a str) -> Self {
+        Self(value.chars().peekable())
     }
 }
 
-#[inline]
-fn skip_until(chars: &mut Reader, delimiter: char) {
-    for c in chars {
-        if c == delimiter {
-            break;
-        }
-    }
-}
+pub struct Parser<'a>(Reader<'a>);
 
-#[inline]
-pub fn read_until(chars: &mut Reader, delimiter: char) -> String {
-    let mut string = String::new();
-    for c in chars {
-        if c == delimiter {
-            break;
-        }
-        string.push(c);
-    }
-    string
-}
-
-fn read_word(chars: &mut Reader) -> String {
-    let mut word = String::new();
-    for c in chars {
-        if c.is_whitespace() {
-            break;
-        }
-        word.push(c);
-    }
-    word
-}
-
-fn read_function(chars: &mut Reader) -> Option<Expr> {
-    let name = read_word(chars);
-    if name.is_empty() {
-        return None;
-    }
-
-    let mut body = Vec::new();
-
-    while let Some(ref expr) = next(chars) {
-        if let Expr::Word(word) = expr {
-            if word == ";" {
+impl<'a> Parser<'a> {
+    #[inline]
+    fn skip_whitespaces(&mut self) {
+        while let Some(c) = self.0.peek() {
+            if !c.is_whitespace() {
                 break;
             }
+            self.0.next();
         }
-        body.push(expr.clone());
     }
 
-    let func = expressions::Function { body };
+    #[inline]
+    fn skip_until(&mut self, delimiter: char) {
+        let reader = &mut self.0;
+        reader.take_while(|c| c != &delimiter).for_each(drop)
+    }
 
-    Some(Expr::NewFunction(name, func))
-}
+    #[inline]
+    pub fn read_until(&mut self, delimiter: char) -> String {
+        let reader = &mut self.0;
+        reader.take_while(|c| c != &delimiter).collect()
+    }
 
-fn read_ite(chars: &mut Reader) -> Option<Expr> {
-    let mut acc = Vec::new();
-    let mut then = Vec::new();
-    while let Some(ref expr) = next(chars) {
-        if let Expr::Word(word) = expr {
-            match word.as_str() {
-                "then" => {
-                    then = acc.clone();
-                    acc.clear();
+    #[inline]
+    fn read_word(&mut self) -> String {
+        let reader = &mut self.0;
+        reader
+            .take_while(|c| !c.is_whitespace())
+            .flat_map(|c| c.to_lowercase())
+            .collect()
+    }
+
+    fn read_function(&mut self) -> Option<Expr> {
+        self.skip_whitespaces();
+
+        let name = self.read_word();
+        if name.is_empty() {
+            return None;
+        }
+
+        let body = self
+            .take_while(|expr| {
+                if let Expr::Word(word) = expr {
+                    word != ";"
+                } else {
+                    true
                 }
-                "else" => break,
-                _ => (),
-            }
-        }
-        acc.push(expr.clone());
+            })
+            .collect();
+
+        let func = expressions::Function { body };
+
+        Some(Expr::NewFunction(name, func))
     }
-    let other = acc.clone();
-    Some(Expr::IfThenElse(IfThenElse { then, other }))
+
+    fn read_ite(&mut self) -> Option<Expr> {
+        let mut acc = Vec::new();
+        let mut then = Vec::new();
+
+        for ref expr in self.by_ref() {
+            if let Expr::Word(word) = expr {
+                match word.as_str() {
+                    "then" => {
+                        then = acc.clone();
+                        acc.clear();
+                    }
+                    "else" => break,
+                    _ => (),
+                }
+            }
+            acc.push(expr.clone());
+        }
+        let other = acc.clone();
+
+        Some(Expr::IfThenElse(IfThenElse { then, other }))
+    }
 }
 
-pub fn next(chars: &mut Reader) -> Option<Expr> {
-    use Expr::{NewConstant, NewVariable, Print, Word};
+impl<'a> Iterator for Parser<'a> {
+    type Item = Expr;
 
-    // skip leading spaces
-    skip_whitespaces(chars);
+    fn next(&mut self) -> Option<Self::Item> {
+        use Expr::{NewConstant, NewVariable, Print, Word};
 
-    let word = read_word(chars);
-    match word.as_str() {
-        // end of input
-        "" => None,
-        // skip comments
-        "(" => {
-            skip_until(chars, ')');
-            next(chars)
+        // skip leading spaces
+        self.skip_whitespaces();
+
+        let word = self.read_word();
+        match word.as_str() {
+            // end of input
+            "" => None,
+            // skip comments
+            "(" => {
+                self.skip_until(')');
+                self.next()
+            }
+            "\\" => {
+                self.skip_until('\n');
+                self.next()
+            }
+            // strings
+            ".\"" => {
+                let string = self.read_until('"');
+                Some(Print(string))
+            }
+            ".(" => {
+                let string = self.read_until(')');
+                print!("{}", string);
+                self.next()
+            }
+            // bindings:
+            ":" => self.read_function(),
+            "variable" => {
+                let name = self.read_word();
+                Some(NewVariable(name))
+            }
+            "constant" => {
+                let name = self.read_word();
+                Some(NewConstant(name))
+            }
+            "if" => self.read_ite(),
+            // other words:
+            word => Some(Word(word.to_string())),
         }
-        "\\" => {
-            skip_until(chars, '\n');
-            next(chars)
-        }
-        // strings
-        ".\"" => {
-            let string = read_until(chars, '"');
-            Some(Print(string))
-        }
-        // bindings:
-        ":" => {
-            skip_whitespaces(chars);
-            read_function(chars)
-        }
-        "variable" => {
-            let name = read_word(chars);
-            Some(NewVariable(name))
-        }
-        "constant" => {
-            let name = read_word(chars);
-            Some(NewConstant(name))
-        }
-        "if" => read_ite(chars),
-        // other words:
-        word => Some(Word(word.to_string())),
+    }
+}
+
+impl<'a> From<&'a str> for Parser<'a> {
+    fn from(value: &'a str) -> Self {
+        let reader = Reader::from(value);
+        Self(reader)
     }
 }

@@ -1,7 +1,7 @@
 use crate::{
     errors::Error::{self, Redefined, StackUnderflow},
     expressions::{Expr, Int},
-    parser::{self, Reader},
+    parser::Parser,
 };
 use std::collections::HashMap;
 
@@ -22,8 +22,8 @@ impl Forth {
 
     /// Evaluate a string
     pub fn eval_string(&mut self, string: &str) -> Result<(), Error> {
-        let mut chars = Reader::new(string);
-        while let Some(result) = self.eval_next(&mut chars) {
+        let mut parser = Parser::from(string);
+        while let Some(result) = self.eval_next(&mut parser) {
             result.map_err(|err| {
                 // clear stack on error
                 self.stack.clear();
@@ -34,22 +34,26 @@ impl Forth {
     }
 
     /// Go to next word and evaluate it
-    pub(crate) fn eval_next(&mut self, chars: &mut Reader) -> Option<Result<(), Error>> {
-        let expr = parser::next(chars)?;
+    #[inline]
+    pub(crate) fn eval_next(&mut self, parser: &mut Parser) -> Option<Result<(), Error>> {
+        let expr = parser.next()?;
         Some(expr.execute(self))
     }
 
     /// Push value to the stack.
+    #[inline]
     pub(crate) fn push(&mut self, value: Int) {
         self.stack.push(value)
     }
 
     /// Pop value from the stack.
+    #[inline]
     pub(crate) fn pop(&mut self) -> Result<Int, Error> {
         self.stack.pop().ok_or(StackUnderflow)
     }
 
     /// Define a new word, return an error on redefinition.
+    #[inline]
     pub(crate) fn define_word(&mut self, name: &str, value: Expr) -> Result<(), Error> {
         if self.dictionary.insert(name.to_string(), value).is_some() {
             return Err(Redefined(name.to_string()));
@@ -58,11 +62,13 @@ impl Forth {
     }
 
     /// Get the compiled object associated to the word.
+    #[inline]
     pub(crate) fn get_word(&self, name: &str) -> Option<Expr> {
         self.dictionary.get(name).cloned()
     }
 
     /// The list of all the defined words.
+    #[inline]
     pub(crate) fn words(&self) -> Vec<String> {
         let mut words = self
             .dictionary
