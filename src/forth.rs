@@ -1,13 +1,13 @@
 use crate::{
-    compiled::{Compiled, Int},
     errors::Error::{self, Redefined, StackUnderflow, UnknownWord},
+    objects::{Int, Object},
 };
 use std::collections::HashMap;
 
 /// The Forth interpreter that walks over the code and executes it
 pub struct Forth {
     pub stack: Vec<Int>,
-    dictionary: HashMap<String, Compiled>,
+    dictionary: HashMap<String, Object>,
 }
 
 impl Forth {
@@ -60,7 +60,7 @@ impl Forth {
     }
 
     /// Define a new word, return an error on redefinition.
-    pub(crate) fn define_word(&mut self, name: &str, value: Compiled) -> Result<(), Error> {
+    pub(crate) fn define_word(&mut self, name: &str, value: Object) -> Result<(), Error> {
         if self.dictionary.insert(name.to_string(), value).is_some() {
             return Err(Redefined(name.to_string()));
         }
@@ -68,7 +68,7 @@ impl Forth {
     }
 
     /// Get the compiled object associated to the word.
-    pub(crate) fn get_word(&self, name: &str) -> Option<Compiled> {
+    pub(crate) fn get_word(&self, name: &str) -> Option<Object> {
         self.dictionary.get(name).cloned()
     }
 

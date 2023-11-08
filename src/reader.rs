@@ -1,6 +1,6 @@
 use crate::{
-    compiled::Compiled,
     compiler::compile_function,
+    objects::Object,
     Error::{self, ParsingError},
     Forth,
 };
@@ -28,7 +28,7 @@ fn skip_until(chars: &mut Reader, delimiter: char) {
 }
 
 #[inline]
-fn read_until(chars: &mut Reader, delimiter: char) -> String {
+pub fn read_until(chars: &mut Reader, delimiter: char) -> String {
     let mut string = String::new();
     for c in chars {
         if c == delimiter {
@@ -99,7 +99,7 @@ impl Forth {
                 if name.is_empty() {
                     Err(ParsingError)
                 } else {
-                    let value = Compiled::Variable(0);
+                    let value = Object::Variable(0);
                     self.define_word(&name, value)
                 }
             }
@@ -109,7 +109,7 @@ impl Forth {
                     Err(ParsingError)
                 } else {
                     self.pop().and_then(|value| {
-                        let value = Compiled::Constant(value);
+                        let value = Object::Constant(value);
                         self.define_word(&name, value)
                     })
                 }

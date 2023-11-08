@@ -1,16 +1,16 @@
-use crate::compiled::{
-    imp,
-    Compiled::{self, Function, IfThenElse, Word},
+use crate::objects::{
+    self,
+    Object::{self, Function, IfThenElse, Word},
 };
 
 type WordsIter<'a> = std::slice::Iter<'a, String>;
 
-fn compile_ite(iter: &mut WordsIter) -> Option<Compiled> {
+fn compile_ite(iter: &mut WordsIter) -> Option<Object> {
     let mut acc = Vec::new();
     let mut then = Vec::new();
 
     while let Some(compiled) = next(iter) {
-        if let Compiled::Word(word) = &compiled {
+        if let Object::Word(word) = &compiled {
             match word.as_str() {
                 "then" => {
                     then = acc.clone();
@@ -25,10 +25,10 @@ fn compile_ite(iter: &mut WordsIter) -> Option<Compiled> {
     }
     let otherwise = acc;
 
-    Some(IfThenElse(imp::IfThenElse { then, otherwise }))
+    Some(IfThenElse(objects::IfThenElse { then, otherwise }))
 }
 
-fn next(iter: &mut WordsIter) -> Option<Compiled> {
+fn next(iter: &mut WordsIter) -> Option<Object> {
     let word = iter.next()?;
     match word.as_str() {
         "if" => compile_ite(iter),
@@ -38,7 +38,7 @@ fn next(iter: &mut WordsIter) -> Option<Compiled> {
     }
 }
 
-pub fn compile_function(iter: &mut WordsIter) -> Option<(String, Compiled)> {
+pub fn compile_function(iter: &mut WordsIter) -> Option<(String, Object)> {
     let name = iter.next()?;
 
     let mut body = Vec::new();
@@ -46,5 +46,5 @@ pub fn compile_function(iter: &mut WordsIter) -> Option<(String, Compiled)> {
         body.push(compiled);
     }
 
-    Some((name.clone(), Function(imp::Function { body })))
+    Some((name.clone(), Function(objects::Function { body })))
 }

@@ -1,8 +1,9 @@
 mod buildins;
-mod compiled;
 mod compiler;
 mod errors;
+mod expressions;
 mod forth;
+mod objects;
 mod reader;
 
 pub use crate::errors::Error;

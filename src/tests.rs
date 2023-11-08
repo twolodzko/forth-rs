@@ -1,7 +1,7 @@
 use crate::{
-    compiled::Int,
     errors::Error::{self, StackUnderflow},
     forth::Forth,
+    objects::Int,
 };
 use test_case::test_case;
 

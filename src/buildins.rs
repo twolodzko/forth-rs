@@ -1,13 +1,13 @@
 use crate::{
-    compiled::{
-        Compiled::{self, Callable, CompileOnly, Constant},
-        Int,
-    },
     errors::Error::{self, StackUnderflow},
     forth::Forth,
+    objects::{
+        Int,
+        Object::{self, Callable, CompileOnly, Constant},
+    },
 };
 
-const BUILDINS: &[(&str, Compiled)] = &[
+const BUILDINS: &[(&str, Object)] = &[
     // constants
     ("true", Constant(-1)),
     ("false", Constant(0)),
