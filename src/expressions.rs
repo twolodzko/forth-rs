@@ -8,8 +8,6 @@ pub type Int = i32;
 #[derive(Clone)]
 pub enum Expr {
     Word(String),
-    #[allow(dead_code)]
-    Integer(Int),
     Print(String),
     Callable(fn(forth: &mut Forth) -> Result<(), Error>),
     NewFunction(String, Function),
@@ -37,10 +35,6 @@ impl Expr {
                     }
                 }
             },
-            Integer(val) => {
-                forth.push(*val);
-                Ok(())
-            }
             Print(string) => {
                 print!("{}", string);
                 Ok(())
