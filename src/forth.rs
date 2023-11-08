@@ -34,6 +34,11 @@ impl Forth {
                 }
             }
         }
+        .map_err(|err| {
+            // clear stack on error
+            self.stack.clear();
+            err
+        })
     }
 
     /// Go to next word and evaluate it
@@ -43,7 +48,7 @@ impl Forth {
             Word(ref word) => self.eval_word(word),
             Binding((ref name, compiled)) => self.define_word(name, compiled),
             ToPrint(string) => {
-                print!("{} ", string);
+                print!("{}", string);
                 Ok(())
             }
             Constant(ref name) => match self.pop() {
@@ -75,7 +80,7 @@ impl Forth {
 
     /// Define a new word, return an error on redefinition.
     pub(crate) fn define_word(&mut self, name: &str, value: Compiled) -> Result<(), Error> {
-        if let Some(_) = self.dictionary.insert(name.to_string(), value) {
+        if self.dictionary.insert(name.to_string(), value).is_some() {
             return Err(Redefined(name.to_string()));
         }
         Ok(())

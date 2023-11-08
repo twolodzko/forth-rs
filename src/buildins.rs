@@ -1,5 +1,8 @@
 use crate::{
-    compiled::Compiled::{self, Callable, CompileOnly, Constant},
+    compiled::{
+        Compiled::{self, Callable, CompileOnly, Constant},
+        Int,
+    },
     errors::Error::{self, StackUnderflow},
     forth::Forth,
 };
@@ -15,6 +18,7 @@ const BUILDINS: &[(&str, Compiled)] = &[
     ("drop", Callable(drop)),
     ("swap", Callable(swap)),
     (".", Callable(dot)),
+    ("emit", Callable(emit)),
     (".s", Callable(print_stack)),
     ("words", Callable(words)),
     // compile-only words
@@ -25,6 +29,8 @@ const BUILDINS: &[(&str, Compiled)] = &[
     (":", CompileOnly),
     ("variable", CompileOnly),
     ("constant", CompileOnly),
+    (".(", CompileOnly),
+    (".\"", CompileOnly),
     // ("do", CompileOnly),
     // ("begin", CompileOnly),
     // ("loop", CompileOnly),
@@ -44,12 +50,16 @@ impl Forth {
         }
         forth
     }
+
+    #[inline]
+    fn pop2(&mut self) -> Result<(Int, Int), Error> {
+        Ok((self.pop()?, self.pop()?))
+    }
 }
 
 /// `+ (a b -- c)`
 fn add(forth: &mut Forth) -> Result<(), Error> {
-    let a = forth.pop()?;
-    let b = forth.pop()?;
+    let (a, b) = forth.pop2()?;
     forth.stack.push(a.saturating_add(b));
     Ok(())
 }
@@ -98,18 +108,31 @@ fn print_stack(forth: &mut Forth) -> Result<(), Error> {
         .join(" ");
     let n = forth.stack.len();
     let dots = if n > show_max { "..." } else { "" };
-    print!("<{}> {}{} ", forth.stack.len(), stack, dots);
+    print!("<{}> {}{}", forth.stack.len(), stack, dots);
     Ok(())
 }
 
 /// `words (--)`
 fn words(forth: &mut Forth) -> Result<(), Error> {
-    print!("{} ", forth.words().join(" "));
+    print!("{}", forth.words().join(" "));
     Ok(())
 }
 
 /// `. (-- a)`
 fn dot(forth: &mut Forth) -> Result<(), Error> {
-    print!("{} ", forth.pop()?);
+    print!("{}", forth.pop()?);
+    Ok(())
+}
+
+/// `emit (a --)`
+fn emit(forth: &mut Forth) -> Result<(), Error> {
+    let val = forth.pop()?;
+    if let Ok(u) = val.try_into() {
+        if let Some(c) = char::from_u32(u) {
+            print!("{}", c);
+            return Ok(());
+        }
+    }
+    print!("�");
     Ok(())
 }

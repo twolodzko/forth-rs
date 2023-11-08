@@ -13,8 +13,8 @@ fn main() -> Result<()> {
             Ok(line) => {
                 let _ = rl.add_history_entry(line.as_str());
                 match forth.eval_string(&line) {
-                    Ok(_) => println!("ok"),
-                    Err(msg) => println!("error: {}", msg),
+                    Ok(_) => println!(" ok"),
+                    Err(msg) => println!(" error: {}", msg),
                 }
             }
             Err(ReadlineError::Interrupted | ReadlineError::Eof) => {

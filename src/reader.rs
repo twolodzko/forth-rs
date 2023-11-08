@@ -7,7 +7,7 @@ type Reader<'a> = Peekable<Chars<'a>>;
 pub enum Parsed {
     Word(String),
     ToPrint(String),
-    // a function, variable, or a constant
+    // a function or a variable
     Binding((String, Compiled)),
     Constant(String),
 }
@@ -87,7 +87,7 @@ pub fn read(chars: &mut Reader) -> Option<Parsed> {
         // strings
         ".\"" => Some(ToPrint(read_until(chars, '"'))),
         ".(" => {
-            print!("{} ", read_until(chars, ')'));
+            print!("{}", read_until(chars, ')'));
             read(chars)
         }
         // bindings:
