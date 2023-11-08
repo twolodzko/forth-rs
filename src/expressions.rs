@@ -10,12 +10,10 @@ pub enum Expr {
     Word(String),
     #[allow(dead_code)]
     Integer(Int),
-    #[allow(dead_code)]
     Print(String),
     Callable(fn(forth: &mut Forth) -> Result<(), Error>),
     NewFunction(String, Function),
     Function(Function),
-    #[allow(dead_code)]
     IfThenElse(IfThenElse),
     NewConstant(String),
     Constant(Int),

@@ -1,4 +1,4 @@
-use crate::expressions::{self, Expr};
+use crate::expressions::{self, Expr, IfThenElse};
 use std::{iter::Peekable, str::Chars};
 
 pub struct Reader<'a>(Peekable<Chars<'a>>);
@@ -18,6 +18,7 @@ impl<'a> Reader<'a> {
 impl<'a> Iterator for Reader<'a> {
     type Item = char;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
@@ -65,28 +66,50 @@ fn read_word(chars: &mut Reader) -> String {
     word
 }
 
-// fn read_function(chars: &mut Reader) -> Option<(String, executables::Function)> {
-//     let name = read_word(chars);
-//     if name.is_empty() {
-//         return None;
-//     }
+fn read_function(chars: &mut Reader) -> Option<Expr> {
+    let name = read_word(chars);
+    if name.is_empty() {
+        return None;
+    }
 
-//     while let Some(expr) = next(chars) {
-//         if let Executable::Word(word) = expr {
-//             match word.as_str() {
-//                 ";" => break,
-//                 _ => (), // FIXME
-//             }
-//         }
-//     }
+    let mut body = Vec::new();
 
-//     Some((name, _))
-// }
+    while let Some(ref expr) = next(chars) {
+        if let Expr::Word(word) = expr {
+            if word == ";" {
+                break;
+            }
+        }
+        body.push(expr.clone());
+    }
 
-// TODO
-#[allow(dead_code)]
+    let func = expressions::Function { body };
+
+    Some(Expr::NewFunction(name, func))
+}
+
+fn read_ite(chars: &mut Reader) -> Option<Expr> {
+    let mut acc = Vec::new();
+    let mut then = Vec::new();
+    while let Some(ref expr) = next(chars) {
+        if let Expr::Word(word) = expr {
+            match word.as_str() {
+                "then" => {
+                    then = acc.clone();
+                    acc.clear();
+                }
+                "else" => break,
+                _ => (),
+            }
+        }
+        acc.push(expr.clone());
+    }
+    let other = acc.clone();
+    Some(Expr::IfThenElse(IfThenElse { then, other }))
+}
+
 pub fn next(chars: &mut Reader) -> Option<Expr> {
-    use Expr::{NewConstant, NewFunction, NewVariable, Print, Word};
+    use Expr::{NewConstant, NewVariable, Print, Word};
 
     // skip leading spaces
     skip_whitespaces(chars);
@@ -111,13 +134,8 @@ pub fn next(chars: &mut Reader) -> Option<Expr> {
         }
         // bindings:
         ":" => {
-            // FIXME
             skip_whitespaces(chars);
-            // let words = read_function(chars);
-            // let (name, _func) = compile_function(&mut words.iter())?;
-            let name = "<FIXME>".to_string();
-            let body = Vec::new();
-            Some(NewFunction(name, expressions::Function { body }))
+            read_function(chars)
         }
         "variable" => {
             let name = read_word(chars);
@@ -127,6 +145,7 @@ pub fn next(chars: &mut Reader) -> Option<Expr> {
             let name = read_word(chars);
             Some(NewConstant(name))
         }
+        "if" => read_ite(chars),
         // other words:
         word => Some(Word(word.to_string())),
     }
