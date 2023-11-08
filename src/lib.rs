@@ -1,12 +1,11 @@
 mod buildins;
+mod compiled;
 mod errors;
 mod forth;
-mod memory;
-mod parser;
-mod special;
+mod reader;
 
 pub use crate::errors::Error;
-pub use crate::memory::Memory;
+pub use crate::forth::Forth;
 
 #[cfg(test)]
 mod tests;

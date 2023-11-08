@@ -1,10 +1,10 @@
-use crate::errors::Error::StackUnderflow;
-use crate::memory::{
-    Definition::{self, Callable, Constant},
-    ForthResult, Memory,
+use crate::{
+    compiled::Compiled::{self, Callable, Constant},
+    errors::Error::{self, StackUnderflow},
+    forth::Forth,
 };
 
-const BUILDINS: &[(&str, Definition)] = &[
+const BUILDINS: &[(&str, Compiled)] = &[
     // constants
     ("true", Constant(-1)),
     ("false", Constant(0)),
@@ -16,11 +16,11 @@ const BUILDINS: &[(&str, Definition)] = &[
     ("swap", Callable(swap)),
 ];
 
-impl Memory {
+impl Forth {
     /// Constructs a new, empty Forth server with the stack with at least the specified capacity and
     /// a dictionary of predefined words.
     pub fn new(capacity: usize) -> Self {
-        let mut forth = Memory::with_capacity(capacity);
+        let mut forth = Forth::with_capacity(capacity);
         for (key, val) in BUILDINS {
             forth.dictionary.insert(key.to_string(), val.clone());
         }
@@ -29,7 +29,7 @@ impl Memory {
 }
 
 /// `+ (a b -- c)`
-fn add(forth: &mut Memory) -> ForthResult {
+fn add(forth: &mut Forth) -> Result<(), Error> {
     let a = forth.pop()?;
     let b = forth.pop()?;
     forth.stack.push(a.saturating_add(b));
@@ -37,13 +37,13 @@ fn add(forth: &mut Memory) -> ForthResult {
 }
 
 /// `cr (--)`
-fn cr(_: &mut Memory) -> ForthResult {
+fn cr(_: &mut Forth) -> Result<(), Error> {
     println!();
     Ok(())
 }
 
 /// `swap (a b -- b a)`
-fn swap(forth: &mut Memory) -> ForthResult {
+fn swap(forth: &mut Forth) -> Result<(), Error> {
     let n = forth.stack.len();
     if n < 2 {
         return Err(StackUnderflow);
@@ -53,7 +53,7 @@ fn swap(forth: &mut Memory) -> ForthResult {
 }
 
 /// `dup (a -- a a)`
-fn dup(forth: &mut Memory) -> ForthResult {
+fn dup(forth: &mut Forth) -> Result<(), Error> {
     if let Some(val) = forth.stack.last() {
         forth.push(*val);
         Ok(())
@@ -63,7 +63,7 @@ fn dup(forth: &mut Memory) -> ForthResult {
 }
 
 /// `drop (a --)`
-fn drop(forth: &mut Memory) -> ForthResult {
+fn drop(forth: &mut Forth) -> Result<(), Error> {
     forth.pop()?;
     Ok(())
 }

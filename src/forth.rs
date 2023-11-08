@@ -1,70 +1,45 @@
-use crate::errors::Error::{self, StackUnderflow, UnknownWord};
-use crate::special::{Function, IfThenElse};
+use crate::{
+    compiled::{Compiled, Int},
+    errors::Error::{self, StackUnderflow, UnknownWord},
+    reader::read,
+};
 use std::collections::HashMap;
-use std::str::Chars;
 
-pub type Int = i32;
-
-#[allow(dead_code)] // FIXME
 #[derive(Clone)]
-pub enum Definition {
-    Variable(Int),
-    Constant(Int),
-    Callable(fn(forth: &mut Forth) -> Result<(), Error>),
-    Function(Function),
-    IfThenElse(IfThenElse),
+pub enum Parsed {
+    Word(String),
+    Binding((String, Compiled)),
 }
 
 pub struct Forth {
-    buffer: String,
-    buffer_position: usize,
-    stack: Vec<Int>,
-    dictionary: HashMap<String, Definition>,
+    pub stack: Vec<Int>,
+    pub(crate) dictionary: HashMap<String, Compiled>,
 }
 
 impl Forth {
-    pub fn new(capacity: usize) -> Self {
+    pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            buffer: String::new(),
-            buffer_position: 0,
             stack: Vec::with_capacity(capacity),
             dictionary: HashMap::new(),
         }
     }
 
-    pub fn eval(&mut self, buffer: &str) -> Result<(), Error> {
-        let start: usize;
-        let end: usize;
+    pub fn parse_and_eval(&mut self, buffer: &str) -> Result<(), Error> {
         let mut chars = buffer.chars();
-
-        // skip leading spaces
-        for c in &mut chars {
-            if c.is_whitespace() {
-                break;
+        match read(&mut chars).expect("nothing was read") {
+            Parsed::Word(ref word) => self.evaluate(word),
+            Parsed::Binding((name, def)) => {
+                self.dictionary.insert(name, def);
+                Ok(())
             }
         }
-
-        match read_word(&mut chars).expect("nothing was read").as_ref() {
-            ":" => unimplemented!(),
-            ".\"" => unimplemented!(),
-            ".(" => unimplemented!(),
-            word => {}
-        }
-        Ok(())
     }
 
     /// Execute the word. If the word does not exist in the dictionary, try parsing it as a number and pushing
     /// it into the stack.
-    pub fn execute(&mut self, word: &str) -> Result<(), Error> {
-        use self::Definition::*;
-        match self.dictionary.get(word) {
-            Some(Callable(callable)) => callable(self),
-            Some(Constant(val)) => {
-                self.push(*val);
-                Ok(())
-            }
-            Some(Function(func)) => func.clone().execute(self),
-            Some(_) => unimplemented!(),
+    pub fn evaluate(&mut self, word: &str) -> Result<(), Error> {
+        match self.dictionary.get(word).cloned() {
+            Some(compiled) => compiled.execute(self),
             None => {
                 if let Ok(num) = word.parse::<Int>() {
                     self.push(num);
@@ -85,18 +60,4 @@ impl Forth {
     pub(crate) fn pop(&mut self) -> Result<Int, Error> {
         self.stack.pop().ok_or(StackUnderflow)
     }
-}
-
-fn read_word(chars: &mut Chars<'_>) -> Option<String> {
-    let mut word = String::new();
-    for c in chars {
-        if c.is_whitespace() {
-            break;
-        }
-        word.push(c);
-    }
-    if word.is_empty() {
-        return None;
-    }
-    Some(word)
 }

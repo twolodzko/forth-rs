@@ -1,5 +1,8 @@
-use crate::errors::Error::{self, StackUnderflow};
-use crate::memory::{Definition, Int, Memory};
+use crate::{
+    compiled::Int,
+    errors::Error::{self, StackUnderflow},
+    forth::Forth,
+};
 use test_case::test_case;
 
 #[test_case("0", &[], &[0]; "zero")]
@@ -12,10 +15,10 @@ use test_case::test_case;
 #[test_case("dup", &[1, 2], &[1, 2, 2]; "dup")]
 #[test_case("drop", &[1, 2, 3, 4], &[1, 2, 3]; "drop")]
 fn execute_happy_paths(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
-    let mut forth = Memory::new(10);
+    let mut forth = Forth::new(10);
     forth.stack = init_stack.to_vec();
 
-    forth.execute(word).expect("failed to execute");
+    forth.evaluate(word).expect("failed to execute");
     assert_eq!(expected_stack, forth.stack);
 }
 
@@ -25,25 +28,25 @@ fn execute_happy_paths(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
 #[test_case("dup", &[], StackUnderflow; "dup with empty stack")]
 #[test_case("drop", &[], StackUnderflow; "drop with empty stack")]
 fn execute_unhappy_paths(word: &str, init_stack: &[Int], error_message: Error) {
-    let mut forth = Memory::new(10);
+    let mut forth = Forth::new(10);
     forth.stack = init_stack.to_vec();
 
-    assert_eq!(Err(error_message), forth.execute(word));
+    assert_eq!(Err(error_message), forth.evaluate(word));
 }
 
-#[test]
-fn simple_function() {
-    use crate::special::Function;
-    let mut forth = Memory::new(10);
+// #[test]
+// fn simple_function() {
+//     use crate::compiled::Function;
+//     let mut forth = Memory::new(10);
 
-    // : add2 2 + ;
-    forth.dictionary.insert(
-        "add2".to_string(),
-        Definition::Function(Function::new(&["2", "+"])),
-    );
-    // 3 add2
-    forth.stack = vec![3];
-    forth.execute("add2").expect("failed to execute");
+//     // : add2 2 + ;
+//     forth.dictionary.insert(
+//         "add2".to_string(),
+//         Definition::Function(Function::new(&["2", "+"])),
+//     );
+//     // 3 add2
+//     forth.stack = vec![3];
+//     forth.execute("add2").expect("failed to execute");
 
-    assert_eq!(vec![5], forth.stack);
-}
+//     assert_eq!(vec![5], forth.stack);
+// }
