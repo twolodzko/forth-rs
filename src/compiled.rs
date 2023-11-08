@@ -11,13 +11,16 @@ pub enum Compiled {
     Callable(fn(forth: &mut Forth) -> Result<(), Error>),
     Function(Function),
     IfThenElse(IfThenElse),
+    // Loop(Loop),
+    // PlusLoop(PlusLoop),
+    // Begin(Begin),
 }
 
 impl Compiled {
     pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
         match self {
             Compiled::Callable(exec) => exec(forth),
-            Compiled::Word(word) => forth.evaluate(word),
+            Compiled::Word(word) => forth.eval(word),
             Compiled::Function(func) => func.execute(forth),
             Compiled::IfThenElse(body) => body.execute(forth),
             Compiled::Constant(val) => {

@@ -18,7 +18,7 @@ fn execute_happy_paths(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
     let mut forth = Forth::new(10);
     forth.stack = init_stack.to_vec();
 
-    forth.evaluate(word).expect("failed to execute");
+    forth.eval(word).expect("failed to execute");
     assert_eq!(expected_stack, forth.stack);
 }
 
@@ -31,7 +31,7 @@ fn execute_unhappy_paths(word: &str, init_stack: &[Int], error_message: Error) {
     let mut forth = Forth::new(10);
     forth.stack = init_stack.to_vec();
 
-    assert_eq!(Err(error_message), forth.evaluate(word));
+    assert_eq!(Err(error_message), forth.eval(word));
 }
 
 // #[test]

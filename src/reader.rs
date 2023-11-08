@@ -1,8 +1,12 @@
-use crate::{
-    compiled::{Compiled, Function},
-    forth::Parsed,
-};
+use crate::compiled::{Compiled, Function};
 use std::str::Chars;
+
+#[derive(Clone)]
+pub enum Parsed {
+    Word(String),
+    // a function, variable, or a constant
+    Binding((String, Compiled)),
+}
 
 fn read_word(chars: &mut Chars<'_>) -> Option<String> {
     let mut word = String::new();
@@ -31,6 +35,16 @@ fn read_function(chars: &mut Chars<'_>) -> Option<(String, Function)> {
     unimplemented!()
 }
 
+#[allow(dead_code)] // FIXME
+fn compile(chars: &mut Chars<'_>) -> Option<Compiled> {
+    match read_word(chars).expect("failed to read").as_ref() {
+        "if" => unimplemented!(),
+        "begin" => unimplemented!(),
+        "do" => unimplemented!(),
+        word => Some(Compiled::Word(word.to_string())),
+    }
+}
+
 #[inline]
 fn skip_whitespaces(chars: &mut Chars<'_>) {
     for c in chars {
@@ -53,11 +67,14 @@ pub fn read(chars: &mut Chars<'_>) -> Option<Parsed> {
         }
         ".\"" => unimplemented!(),
         ".(" => unimplemented!(),
+        // bindings:
+        "variable" => unimplemented!(),
+        "constant" => unimplemented!(),
+        // those should fail:
         "if" => unimplemented!(),
         "begin" => unimplemented!(),
         "do" => unimplemented!(),
-        "variable" => unimplemented!(),
-        "constant" => unimplemented!(),
+        // other words:
         word => Some(Word(word.to_string())),
     }
 }

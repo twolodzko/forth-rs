@@ -1,15 +1,9 @@
 use crate::{
     compiled::{Compiled, Int},
     errors::Error::{self, StackUnderflow, UnknownWord},
-    reader::read,
+    reader::{read, Parsed},
 };
 use std::collections::HashMap;
-
-#[derive(Clone)]
-pub enum Parsed {
-    Word(String),
-    Binding((String, Compiled)),
-}
 
 pub struct Forth {
     pub stack: Vec<Int>,
@@ -24,12 +18,14 @@ impl Forth {
         }
     }
 
-    pub fn parse_and_eval(&mut self, buffer: &str) -> Result<(), Error> {
+    #[allow(dead_code)] // FIXME
+    fn next(&mut self, buffer: &str) -> Result<(), Error> {
+        use Parsed::{Binding, Word};
         let mut chars = buffer.chars();
         match read(&mut chars).expect("nothing was read") {
-            Parsed::Word(ref word) => self.evaluate(word),
-            Parsed::Binding((name, def)) => {
-                self.dictionary.insert(name, def);
+            Word(ref word) => self.eval(word),
+            Binding((name, compiled)) => {
+                self.dictionary.insert(name, compiled);
                 Ok(())
             }
         }
@@ -37,7 +33,7 @@ impl Forth {
 
     /// Execute the word. If the word does not exist in the dictionary, try parsing it as a number and pushing
     /// it into the stack.
-    pub fn evaluate(&mut self, word: &str) -> Result<(), Error> {
+    pub fn eval(&mut self, word: &str) -> Result<(), Error> {
         match self.dictionary.get(word).cloned() {
             Some(compiled) => compiled.execute(self),
             None => {
