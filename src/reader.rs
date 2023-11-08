@@ -1,10 +1,7 @@
-use crate::{
-    executables::{self, Executable},
-    Error, Forth,
-};
+use crate::executables::{self, Executable};
 use std::{iter::Peekable, str::Chars};
 
-type Reader<'a> = Peekable<Chars<'a>>;
+pub type Reader<'a> = Peekable<Chars<'a>>;
 
 #[inline]
 fn skip_whitespaces(chars: &mut Reader) {
@@ -68,7 +65,7 @@ fn read_word(chars: &mut Reader) -> String {
 
 // TODO
 #[allow(dead_code)]
-fn next(chars: &mut Reader) -> Option<Executable> {
+pub fn next(chars: &mut Reader) -> Option<Executable> {
     // skip leading spaces
     skip_whitespaces(chars);
 
@@ -113,12 +110,5 @@ fn next(chars: &mut Reader) -> Option<Executable> {
         }
         // other words:
         word => Some(Executable::Word(word.to_string())),
-    }
-}
-
-impl Forth {
-    /// Go to next word and evaluate it
-    pub(crate) fn eval_next_word(&mut self, chars: &mut Reader) -> Option<Result<(), Error>> {
-        Some(next(chars)?.execute(self))
     }
 }

@@ -1,6 +1,7 @@
 use crate::{
     errors::Error::{self, Redefined, StackUnderflow, UnknownWord},
     executables::{Executable, Int},
+    reader::{next, Reader},
 };
 use std::collections::HashMap;
 
@@ -47,6 +48,11 @@ impl Forth {
             result?;
         }
         Ok(())
+    }
+
+    /// Go to next word and evaluate it
+    pub(crate) fn eval_next_word(&mut self, chars: &mut Reader) -> Option<Result<(), Error>> {
+        Some(next(chars)?.execute(self))
     }
 
     /// Push value to the stack.
