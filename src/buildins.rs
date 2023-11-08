@@ -1,5 +1,5 @@
 use crate::{
-    compiled::Compiled::{self, Callable, Constant},
+    compiled::Compiled::{self, Callable, CompileOnly, Constant},
     errors::Error::{self, StackUnderflow},
     forth::Forth,
 };
@@ -14,9 +14,24 @@ const BUILDINS: &[(&str, Compiled)] = &[
     ("dup", Callable(dup)),
     ("drop", Callable(drop)),
     ("swap", Callable(swap)),
+    (".", Callable(dot)),
     (".s", Callable(print_stack)),
     ("words", Callable(words)),
-    (".", Callable(dot)),
+    // compile-only words
+    ("if", CompileOnly),
+    ("then", CompileOnly),
+    ("else", CompileOnly),
+    (";", CompileOnly),
+    (":", CompileOnly),
+    ("variable", CompileOnly),
+    ("constant", CompileOnly),
+    // ("do", CompileOnly),
+    // ("begin", CompileOnly),
+    // ("loop", CompileOnly),
+    // ("+loop", CompileOnly),
+    // ("again", CompileOnly),
+    // ("while", CompileOnly),
+    // ("until", CompileOnly),
 ];
 
 impl Forth {
@@ -25,7 +40,7 @@ impl Forth {
     pub fn new(capacity: usize) -> Self {
         let mut forth = Forth::with_capacity(capacity);
         for (key, val) in BUILDINS {
-            forth.dictionary.insert(key.to_string(), val.clone());
+            let _ = forth.define_word(key, val.clone());
         }
         forth
     }
@@ -89,13 +104,7 @@ fn print_stack(forth: &mut Forth) -> Result<(), Error> {
 
 /// `words (--)`
 fn words(forth: &mut Forth) -> Result<(), Error> {
-    let words = forth
-        .dictionary
-        .keys()
-        .map(|s| &**s)
-        .collect::<Vec<_>>()
-        .join(" ");
-    print!("{} ", words);
+    print!("{} ", forth.words().join(" "));
     Ok(())
 }
 

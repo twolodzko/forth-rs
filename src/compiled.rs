@@ -3,7 +3,6 @@ use crate::{errors::Error, forth::Forth};
 pub type Int = i32;
 
 /// The compiled objects.
-#[allow(dead_code)] // FIXME
 #[derive(Clone)]
 pub enum Compiled {
     Word(String),
@@ -15,11 +14,12 @@ pub enum Compiled {
     // Loop(Loop),
     // PlusLoop(PlusLoop),
     // Begin(Begin),
+    CompileOnly,
 }
 
 impl Compiled {
     pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
-        use Compiled::{Callable, Constant, Function, IfThenElse, Variable, Word};
+        use Compiled::*;
         match self {
             Callable(exec) => exec(forth),
             Word(word) => forth.eval_word(word),
@@ -30,6 +30,7 @@ impl Compiled {
                 Ok(())
             }
             Variable(_) => Ok(()),
+            CompileOnly => Err(Error::CompileOnlyWord),
         }
     }
 }

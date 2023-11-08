@@ -9,6 +9,7 @@ pub enum Parsed {
     ToPrint(String),
     // a function, variable, or a constant
     Binding((String, Compiled)),
+    Constant(String),
 }
 
 #[inline]
@@ -66,7 +67,7 @@ fn read_function(chars: &mut Reader) -> Vec<String> {
 }
 
 pub fn read(chars: &mut Reader) -> Option<Parsed> {
-    use self::Parsed::{Binding, ToPrint, Word};
+    use self::Parsed::{Binding, Constant, ToPrint, Word};
 
     // skip leading spaces
     skip_whitespaces(chars);
@@ -104,7 +105,14 @@ pub fn read(chars: &mut Reader) -> Option<Parsed> {
                 _ => Some(Binding((name, Compiled::Variable(0)))),
             }
         }
-        "constant" => unimplemented!(),
+        "constant" => {
+            let name = read_word(chars);
+            match name.as_str() {
+                // FIXME: this should be error
+                "" | "\n" => None,
+                _ => Some(Constant(name)),
+            }
+        }
         // other words:
         _ => Some(Word(word)),
     }
