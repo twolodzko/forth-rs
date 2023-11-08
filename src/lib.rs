@@ -1,6 +1,6 @@
 mod buildins;
 mod errors;
-mod executables;
+mod expressions;
 mod forth;
 mod reader;
 

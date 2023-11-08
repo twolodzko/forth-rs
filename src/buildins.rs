@@ -1,13 +1,13 @@
 use crate::{
     errors::Error::{self, StackUnderflow},
-    executables::{
-        Executable::{self, Callable, CompileOnly, Constant},
+    expressions::{
+        Expr::{self, Callable, Constant, Dummy},
         Int,
     },
     forth::Forth,
 };
 
-const BUILDINS: &[(&str, Executable)] = &[
+const BUILDINS: &[(&str, Expr)] = &[
     // constants
     ("true", Constant(-1)),
     ("false", Constant(0)),
@@ -22,15 +22,15 @@ const BUILDINS: &[(&str, Executable)] = &[
     (".s", Callable(print_stack)),
     ("words", Callable(words)),
     // compile-only words
-    ("if", CompileOnly),
-    ("then", CompileOnly),
-    ("else", CompileOnly),
-    (";", CompileOnly),
-    (":", CompileOnly),
-    ("variable", CompileOnly),
-    ("constant", CompileOnly),
-    (".(", CompileOnly),
-    (".\"", CompileOnly),
+    ("if", Dummy),
+    ("then", Dummy),
+    ("else", Dummy),
+    (";", Dummy),
+    (":", Dummy),
+    ("variable", Dummy),
+    ("constant", Dummy),
+    (".(", Dummy),
+    (".\"", Dummy),
     // ("do", CompileOnly),
     // ("begin", CompileOnly),
     // ("loop", CompileOnly),

@@ -1,14 +1,17 @@
-use crate::{errors::Error, forth::Forth};
+use crate::{
+    errors::Error::{self, UnknownWord},
+    forth::Forth,
+};
 
 pub type Int = i32;
 
 #[derive(Clone)]
-pub enum Executable {
+pub enum Expr {
     Word(String),
     #[allow(dead_code)]
     Integer(Int),
     #[allow(dead_code)]
-    String(String),
+    Print(String),
     Callable(fn(forth: &mut Forth) -> Result<(), Error>),
     NewFunction(String, Function),
     Function(Function),
@@ -18,12 +21,12 @@ pub enum Executable {
     Constant(Int),
     NewVariable(String),
     Variable(Int),
-    CompileOnly,
+    Dummy,
 }
 
-impl Executable {
+impl Expr {
     pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
-        use Executable::*;
+        use Expr::*;
         match self {
             Word(word) => match forth.get_word(word) {
                 Some(compiled) => compiled.execute(forth),
@@ -32,7 +35,7 @@ impl Executable {
                         forth.push(num);
                         Ok(())
                     } else {
-                        Err(Error::UnknownWord(word.to_string()))
+                        Err(UnknownWord(word.to_string()))
                     }
                 }
             },
@@ -40,13 +43,13 @@ impl Executable {
                 forth.push(*val);
                 Ok(())
             }
-            String(string) => {
+            Print(string) => {
                 print!("{}", string);
                 Ok(())
             }
             Callable(exec) => exec(forth),
             NewFunction(name, func) => {
-                let func = Executable::Function(func.clone());
+                let func = Function(func.clone());
                 forth.define_word(name, func)
             }
             Function(func) => func.execute(forth),
@@ -56,20 +59,20 @@ impl Executable {
                 Ok(())
             }
             NewConstant(name) => {
-                let value = Executable::Constant(forth.pop()?);
+                let value = Constant(forth.pop()?);
                 forth.define_word(name, value)
             }
             NewVariable(name) => {
-                let default = Executable::Variable(0);
+                let default = Variable(0);
                 forth.define_word(name, default)
             }
             Variable(_) => Ok(()),
-            CompileOnly => Ok(()),
+            Dummy => Ok(()),
         }
     }
 }
 
-fn execute_many(forth: &mut Forth, body: &[Executable]) -> Result<(), Error> {
+fn execute_many(forth: &mut Forth, body: &[Expr]) -> Result<(), Error> {
     for obj in body {
         obj.execute(forth)?;
     }
@@ -78,7 +81,7 @@ fn execute_many(forth: &mut Forth, body: &[Executable]) -> Result<(), Error> {
 
 #[derive(Clone)]
 pub struct Function {
-    pub body: Vec<Executable>,
+    pub body: Vec<Expr>,
 }
 
 impl Function {
@@ -89,8 +92,8 @@ impl Function {
 
 #[derive(Clone)]
 pub struct IfThenElse {
-    pub then: Vec<Executable>,
-    pub other: Vec<Executable>,
+    pub then: Vec<Expr>,
+    pub other: Vec<Expr>,
 }
 
 impl IfThenElse {

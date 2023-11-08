@@ -1,6 +1,6 @@
 use crate::{
     errors::Error::{self, StackUnderflow},
-    executables::Int,
+    expressions::Int,
     forth::Forth,
 };
 use test_case::test_case;

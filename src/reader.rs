@@ -1,4 +1,4 @@
-use crate::executables::{self, Executable};
+use crate::expressions::{self, Expr};
 use std::{iter::Peekable, str::Chars};
 
 pub type Reader<'a> = Peekable<Chars<'a>>;
@@ -65,7 +65,9 @@ fn read_word(chars: &mut Reader) -> String {
 
 // TODO
 #[allow(dead_code)]
-pub fn next(chars: &mut Reader) -> Option<Executable> {
+pub fn next(chars: &mut Reader) -> Option<Expr> {
+    use Expr::{NewConstant, NewFunction, NewVariable, Print, Word};
+
     // skip leading spaces
     skip_whitespaces(chars);
 
@@ -85,7 +87,7 @@ pub fn next(chars: &mut Reader) -> Option<Executable> {
         // strings
         ".\"" => {
             let string = read_until(chars, '"');
-            Some(Executable::String(string))
+            Some(Print(string))
         }
         // bindings:
         ":" => {
@@ -95,20 +97,17 @@ pub fn next(chars: &mut Reader) -> Option<Executable> {
             // let (name, _func) = compile_function(&mut words.iter())?;
             let name = "<FIXME>".to_string();
             let body = Vec::new();
-            Some(Executable::NewFunction(
-                name,
-                executables::Function { body },
-            ))
+            Some(NewFunction(name, expressions::Function { body }))
         }
         "variable" => {
             let name = read_word(chars);
-            Some(Executable::NewVariable(name))
+            Some(NewVariable(name))
         }
         "constant" => {
             let name = read_word(chars);
-            Some(Executable::NewConstant(name))
+            Some(NewConstant(name))
         }
         // other words:
-        word => Some(Executable::Word(word.to_string())),
+        word => Some(Word(word.to_string())),
     }
 }
