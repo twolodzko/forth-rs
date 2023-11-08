@@ -1,14 +1,15 @@
-use crate::compiled::{Compiled, Function};
+use crate::compiled::{imp, Compiled};
 use std::str::Chars;
 
 #[derive(Clone)]
 pub enum Parsed {
     Word(String),
+    ToPrint(String),
     // a function, variable, or a constant
     Binding((String, Compiled)),
 }
 
-fn read_word(chars: &mut Chars<'_>) -> Option<String> {
+fn read_word(chars: &mut Chars<'_>) -> String {
     let mut word = String::new();
     for c in chars {
         if c.is_whitespace() {
@@ -16,14 +17,23 @@ fn read_word(chars: &mut Chars<'_>) -> Option<String> {
         }
         word.push(c);
     }
-    if word.is_empty() {
-        return None;
+    word
+}
+
+#[inline]
+fn read_until(chars: &mut Chars<'_>, delimiter: char) -> String {
+    let mut string = String::new();
+    for c in chars {
+        if c == delimiter {
+            break;
+        }
+        string.push(c);
     }
-    Some(word)
+    string
 }
 
 #[allow(unused_variables)] // FIXME
-fn read_function(chars: &mut Chars<'_>) -> Option<(String, Function)> {
+fn read_function(chars: &mut Chars<'_>) -> Option<(String, Compiled)> {
     // let mut name = read_word(chars)?;
     // let mut body = Vec::new();
     // loop {
@@ -36,13 +46,29 @@ fn read_function(chars: &mut Chars<'_>) -> Option<(String, Function)> {
 }
 
 #[allow(dead_code)] // FIXME
-fn compile(chars: &mut Chars<'_>) -> Option<Compiled> {
-    match read_word(chars).expect("failed to read").as_ref() {
+fn compile(chars: &mut Chars<'_>) -> Compiled {
+    let word = read_word(chars);
+    match word.as_ref() {
         "if" => unimplemented!(),
         "begin" => unimplemented!(),
         "do" => unimplemented!(),
-        word => Some(Compiled::Word(word.to_string())),
+        _ => Compiled::Word(word),
     }
+}
+
+#[allow(dead_code)] // FIXME
+fn compile_function(chars: &mut Chars<'_>) -> Compiled {
+    let mut body = Vec::new();
+    loop {
+        let compiled = compile(chars);
+        if let Compiled::Word(word) = &compiled {
+            if matches!(word.as_ref(), ";") {
+                break;
+            }
+        }
+        body.push(compiled);
+    }
+    Compiled::Function(imp::Function { body })
 }
 
 #[inline]
@@ -54,27 +80,56 @@ fn skip_whitespaces(chars: &mut Chars<'_>) {
     }
 }
 
+#[inline]
+fn skip_comment(chars: &mut Chars<'_>) {
+    for c in chars {
+        if c == ')' {
+            break;
+        }
+    }
+}
+
+#[inline]
+fn skip_line(chars: &mut Chars<'_>) {
+    for c in chars {
+        if c == '\n' {
+            break;
+        }
+    }
+}
+
 pub fn read(chars: &mut Chars<'_>) -> Option<Parsed> {
-    use self::Parsed::{Binding, Word};
+    use self::Parsed::{Binding, ToPrint, Word};
 
     // skip leading spaces
     skip_whitespaces(chars);
 
-    match read_word(chars).expect("nothing was read").as_ref() {
+    let word = read_word(chars);
+    match word.as_ref() {
+        "" => None,
+        // comments
+        "(" => {
+            skip_comment(chars);
+            read(chars)
+        }
+        "\\" => {
+            skip_line(chars);
+            read(chars)
+        }
+        // strings
+        ".\"" => Some(ToPrint(read_until(chars, '"'))),
+        ".(" => {
+            print!("{}", read_until(chars, ')'));
+            read(chars)
+        }
+        // bindings:
         ":" => {
             let (name, func) = read_function(chars)?;
-            Some(Binding((name, Compiled::Function(func))))
+            Some(Binding((name, func)))
         }
-        ".\"" => unimplemented!(),
-        ".(" => unimplemented!(),
-        // bindings:
         "variable" => unimplemented!(),
         "constant" => unimplemented!(),
-        // those should fail:
-        "if" => unimplemented!(),
-        "begin" => unimplemented!(),
-        "do" => unimplemented!(),
         // other words:
-        word => Some(Word(word.to_string())),
+        _ => Some(Word(word)),
     }
 }

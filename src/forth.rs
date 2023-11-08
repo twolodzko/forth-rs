@@ -1,6 +1,6 @@
 use crate::{
     compiled::{Compiled, Int},
-    errors::Error::{self, StackUnderflow, UnknownWord},
+    errors::Error::{self, CompileOnlyWord, StackUnderflow, UnknownWord},
     reader::{read, Parsed},
 };
 use std::collections::HashMap;
@@ -20,12 +20,16 @@ impl Forth {
 
     #[allow(dead_code)] // FIXME
     fn next(&mut self, buffer: &str) -> Result<(), Error> {
-        use Parsed::{Binding, Word};
+        use Parsed::{Binding, ToPrint, Word};
         let mut chars = buffer.chars();
         match read(&mut chars).expect("nothing was read") {
             Word(ref word) => self.eval(word),
             Binding((name, compiled)) => {
                 self.dictionary.insert(name, compiled);
+                Ok(())
+            }
+            ToPrint(string) => {
+                print!("{}", string);
                 Ok(())
             }
         }
@@ -34,6 +38,10 @@ impl Forth {
     /// Execute the word. If the word does not exist in the dictionary, try parsing it as a number and pushing
     /// it into the stack.
     pub fn eval(&mut self, word: &str) -> Result<(), Error> {
+        if matches!(word, "if" | "do" | "begin") {
+            return Err(CompileOnlyWord(word.to_string()));
+        }
+
         match self.dictionary.get(word).cloned() {
             Some(compiled) => compiled.execute(self),
             None => {

@@ -14,6 +14,8 @@ const BUILDINS: &[(&str, Compiled)] = &[
     ("dup", Callable(dup)),
     ("drop", Callable(drop)),
     ("swap", Callable(swap)),
+    (".s", Callable(print_stack)),
+    ("words", Callable(words)),
 ];
 
 impl Forth {
@@ -65,5 +67,33 @@ fn dup(forth: &mut Forth) -> Result<(), Error> {
 /// `drop (a --)`
 fn drop(forth: &mut Forth) -> Result<(), Error> {
     forth.pop()?;
+    Ok(())
+}
+
+/// `.s (--)`
+fn print_stack(forth: &mut Forth) -> Result<(), Error> {
+    let show_max = 10;
+    let stack = forth
+        .stack
+        .iter()
+        .take(show_max)
+        .map(|x| x.to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+    let n = forth.stack.len();
+    let dots = if n > show_max { "..." } else { "" };
+    print!("<{}> {}{}", forth.stack.len(), stack, dots);
+    Ok(())
+}
+
+/// `words (--)`
+fn words(forth: &mut Forth) -> Result<(), Error> {
+    let words = forth
+        .dictionary
+        .keys()
+        .map(|s| &**s)
+        .collect::<Vec<_>>()
+        .join(" ");
+    print!("{}", words);
     Ok(())
 }

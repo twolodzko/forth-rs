@@ -4,6 +4,7 @@ use std::fmt::Display;
 pub enum Error {
     StackUnderflow,
     UnknownWord(String),
+    CompileOnlyWord(String),
     Missing(char),
 }
 
@@ -13,6 +14,7 @@ impl Display for Error {
         let msg = match self {
             StackUnderflow => "stack underflow".to_string(),
             UnknownWord(word) => format!("unknown word: {}", word),
+            CompileOnlyWord(word) => format!("this is a compile-only word: {}", word),
             Missing(char) => format!("missing: {}", char),
         };
         write!(f, "{}", msg)
