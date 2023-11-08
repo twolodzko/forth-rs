@@ -120,7 +120,7 @@ fn words(forth: &mut Forth) -> Result<(), Error> {
 
 /// `. (-- a)`
 fn dot(forth: &mut Forth) -> Result<(), Error> {
-    print!("{}", forth.pop()?);
+    print!("{} ", forth.pop()?);
     Ok(())
 }
 

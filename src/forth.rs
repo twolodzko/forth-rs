@@ -1,9 +1,8 @@
 use crate::{
     compiled::{Compiled, Int},
     errors::Error::{self, Redefined, StackUnderflow, UnknownWord},
-    reader::{read, Parsed},
 };
-use std::{collections::HashMap, iter::Peekable, str::Chars};
+use std::collections::HashMap;
 
 /// The Forth interpreter that walks over the code and executes it
 pub struct Forth {
@@ -39,24 +38,6 @@ impl Forth {
             self.stack.clear();
             err
         })
-    }
-
-    /// Go to next word and evaluate it
-    fn eval_next_word(&mut self, chars: &mut Peekable<Chars<'_>>) -> Option<Result<(), Error>> {
-        use Parsed::{Binding, Constant, ToPrint, Word};
-        let result = match read(chars)? {
-            Word(ref word) => self.eval_word(word),
-            Binding((ref name, compiled)) => self.define_word(name, compiled),
-            ToPrint(string) => {
-                print!("{}", string);
-                Ok(())
-            }
-            Constant(ref name) => match self.pop() {
-                Ok(value) => self.define_word(name, Compiled::Constant(value)),
-                Err(msg) => Err(msg),
-            },
-        };
-        Some(result)
     }
 
     /// Evaluate a string

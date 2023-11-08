@@ -1,16 +1,12 @@
-use crate::{compiled::Compiled, compiler::compile_function};
+use crate::{
+    compiled::Compiled,
+    compiler::compile_function,
+    Error::{self, ParsingError},
+    Forth,
+};
 use std::{iter::Peekable, str::Chars};
 
 type Reader<'a> = Peekable<Chars<'a>>;
-
-#[derive(Clone)]
-pub enum Parsed {
-    Word(String),
-    ToPrint(String),
-    // a function or a variable
-    Binding((String, Compiled)),
-    Constant(String),
-}
 
 #[inline]
 fn skip_whitespaces(chars: &mut Reader) {
@@ -66,54 +62,61 @@ fn read_function(chars: &mut Reader) -> Vec<String> {
     body
 }
 
-pub fn read(chars: &mut Reader) -> Option<Parsed> {
-    use self::Parsed::{Binding, Constant, ToPrint, Word};
+impl Forth {
+    /// Go to next word and evaluate it
+    pub(crate) fn eval_next_word(&mut self, chars: &mut Reader) -> Option<Result<(), Error>> {
+        // skip leading spaces
+        skip_whitespaces(chars);
 
-    // skip leading spaces
-    skip_whitespaces(chars);
-
-    let word = read_word(chars);
-    match word.as_str() {
-        "" | "\n" => None,
-        // comments
-        "(" => {
-            skip_until(chars, ')');
-            read(chars)
-        }
-        "\\" => {
-            skip_until(chars, '\n');
-            read(chars)
-        }
-        // strings
-        ".\"" => Some(ToPrint(read_until(chars, '"'))),
-        ".(" => {
-            print!("{}", read_until(chars, ')'));
-            read(chars)
-        }
-        // bindings:
-        ":" => {
-            skip_whitespaces(chars);
-            let words = read_function(chars);
-            let (name, func) = compile_function(&mut words.iter())?;
-            Some(Binding((name, func)))
-        }
-        "variable" => {
-            let name = read_word(chars);
-            match name.as_str() {
-                // FIXME: this should be error
-                "" | "\n" => None,
-                _ => Some(Binding((name, Compiled::Variable(0)))),
+        let word = read_word(chars);
+        let result = match word.as_str() {
+            // end of input
+            "" => return None,
+            // comments
+            "(" => {
+                skip_until(chars, ')');
+                return self.eval_next_word(chars);
             }
-        }
-        "constant" => {
-            let name = read_word(chars);
-            match name.as_str() {
-                // FIXME: this should be error
-                "" | "\n" => None,
-                _ => Some(Constant(name)),
+            "\\" => {
+                skip_until(chars, '\n');
+                return self.eval_next_word(chars);
             }
-        }
-        // other words:
-        _ => Some(Word(word)),
+            // strings
+            ".\"" | ".(" => {
+                // FIXME
+                print!("{}", read_until(chars, '"'));
+                Ok(())
+            }
+            // bindings:
+            ":" => {
+                skip_whitespaces(chars);
+                let words = read_function(chars);
+                let (name, func) = compile_function(&mut words.iter())?;
+                self.define_word(&name, func)
+            }
+            "variable" => {
+                let name = read_word(chars);
+                if name.is_empty() {
+                    Err(ParsingError)
+                } else {
+                    let value = Compiled::Variable(0);
+                    self.define_word(&name, value)
+                }
+            }
+            "constant" => {
+                let name = read_word(chars);
+                if name.is_empty() {
+                    Err(ParsingError)
+                } else {
+                    self.pop().and_then(|value| {
+                        let value = Compiled::Constant(value);
+                        self.define_word(&name, value)
+                    })
+                }
+            }
+            // other words:
+            word => self.eval_word(word),
+        };
+        Some(result)
     }
 }

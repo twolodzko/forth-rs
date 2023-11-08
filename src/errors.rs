@@ -6,6 +6,7 @@ pub enum Error {
     UnknownWord(String),
     CompileOnlyWord,
     Redefined(String),
+    ParsingError,
 }
 
 impl Display for Error {
@@ -16,6 +17,7 @@ impl Display for Error {
             UnknownWord(word) => format!("{} is an unknown word", word),
             CompileOnlyWord => "compile-only word".to_string(),
             Redefined(name) => format!("{} was redefined", name),
+            ParsingError => "parsing error".to_string(),
         };
         write!(f, "{}", msg)
     }
