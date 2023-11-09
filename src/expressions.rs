@@ -7,16 +7,25 @@ pub type Int = i32;
 
 #[derive(Clone)]
 pub enum Expr {
+    /// Execute the function related to this word.
     Word(String),
+    /// The string that is printed,
     Print(String),
+    /// A builtin function.
     Callable(fn(forth: &mut Forth) -> Result<(), Error>),
+    /// Initialize a function and name it.
     NewFunction(String, imp::Function),
+    /// A function that can be executed.
     Function(imp::Function),
+    /// If-then-else block.
     IfThenElse(imp::IfThenElse),
+    /// Create a new constant.
     NewConstant(String),
+    /// Push the constant to the stack.
     Constant(Int),
+    /// Create a new constant holding the memory address of the variable.
     NewVariable(String),
-    Variable(Int),
+    /// Placeholder for a reserved word.
     Dummy,
 }
 
@@ -51,14 +60,10 @@ impl Expr {
                 Ok(())
             }
             NewConstant(name) => {
-                let value = Constant(forth.pop()?);
-                forth.define_word(name, value)
+                let value = forth.pop()?;
+                forth.define_word(name, Constant(value))
             }
-            NewVariable(name) => {
-                let default = Variable(0);
-                forth.define_word(name, default)
-            }
-            Variable(_) => Ok(()),
+            NewVariable(name) => forth.insert_variable(name, 0),
             Dummy => Ok(()),
         }
     }

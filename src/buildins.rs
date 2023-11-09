@@ -1,5 +1,5 @@
 use crate::{
-    errors::Error::{self, StackUnderflow},
+    errors::Error::{self, InvalidAddress, StackUnderflow},
     expressions::{
         Expr::{self, Callable, Constant, Dummy},
         Int,
@@ -33,6 +33,9 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("swap", Callable(swap)),
     ("rot", Callable(rot)),
     ("over", Callable(over)),
+    // variables
+    ("!", Callable(set)),
+    ("@", Callable(fetch)),
     // i/o
     ("cr", Callable(cr)),
     (".", Callable(dot)),
@@ -64,7 +67,7 @@ impl Forth {
     /// Constructs a new, empty Forth server with the stack with at least the specified capacity and
     /// a dictionary of predefined words.
     pub fn new(capacity: usize) -> Self {
-        let mut forth = Forth::with_capacity(capacity);
+        let mut forth = Forth::empty(capacity);
         for (key, val) in BUILDINS {
             forth
                 .define_word(key, val.clone())
@@ -73,52 +76,55 @@ impl Forth {
         forth
     }
 
+    /// Pop two values from the stack, return them in the order they were entered into the stack.
     #[inline]
     fn pop2(&mut self) -> Result<(Int, Int), Error> {
-        Ok((self.pop()?, self.pop()?))
+        let b = self.pop()?;
+        let a = self.pop()?;
+        Ok((a, b))
     }
 }
 
 /// `+ (n1 n2 -- sum)`
 fn add(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(b.saturating_add(a));
+    forth.stack.push(a.saturating_add(b));
     Ok(())
 }
 
 /// `- (n1 n2 -- diff)`
 fn sub(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(b.saturating_sub(a));
+    forth.stack.push(a.saturating_sub(b));
     Ok(())
 }
 
 /// `* (n1 n2 -- prod)`
 fn mul(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(b.saturating_mul(a));
+    forth.stack.push(a.saturating_mul(b));
     Ok(())
 }
 
 /// `/ (n1 n2 -- quot)`
 fn div(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(b / a);
+    forth.stack.push(a / b);
     Ok(())
 }
 
 /// `mod (n1 n2 -- rem)`
 fn rem(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(b % a);
+    forth.stack.push(a % b);
     Ok(())
 }
 
 /// `/mod (n1 n2 -- rem quot)`
 fn div_rem(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(b / a);
-    forth.stack.push(b % a);
+    forth.stack.push(a / b);
+    forth.stack.push(a % b);
     Ok(())
 }
 
@@ -139,42 +145,42 @@ fn negate(forth: &mut Forth) -> Result<(), Error> {
 /// `= (n1 n2 -- flag)`
 fn eq(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(if b == a { -1 } else { 0 });
+    forth.stack.push(if a == b { -1 } else { 0 });
     Ok(())
 }
 
 /// `<> (n1 n2 -- flag)`
 fn ne(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(if b != a { -1 } else { 0 });
+    forth.stack.push(if a != b { -1 } else { 0 });
     Ok(())
 }
 
 /// `< (n1 n2 -- flag)`
 fn lt(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(if b < a { -1 } else { 0 });
+    forth.stack.push(if a < b { -1 } else { 0 });
     Ok(())
 }
 
 /// `> (n1 n2 -- flag)`
 fn gt(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(if b > a { -1 } else { 0 });
+    forth.stack.push(if a > b { -1 } else { 0 });
     Ok(())
 }
 
 /// `and (n1 n2 -- n3)`
 fn and(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(if b != 0 { a } else { b });
+    forth.stack.push(if a != 0 { b } else { a });
     Ok(())
 }
 
 /// `or (n1 n2 -- n3)`
 fn or(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(if b != 0 { b } else { a });
+    forth.stack.push(if a != 0 { a } else { b });
     Ok(())
 }
 
@@ -271,5 +277,24 @@ fn print_stack(forth: &mut Forth) -> Result<(), Error> {
 /// `words (--)`
 fn words(forth: &mut Forth) -> Result<(), Error> {
     print!("{}", forth.words().join(" "));
+    Ok(())
+}
+
+/// `! (n addr --)`
+fn set(forth: &mut Forth) -> Result<(), Error> {
+    let (val, addr) = forth.pop2()?;
+    let addr = addr as usize;
+    if addr >= forth.memory.len() {
+        return Err(InvalidAddress);
+    }
+    forth.memory.insert(addr, val);
+    Ok(())
+}
+
+/// `@ (addr -- n)`
+fn fetch(forth: &mut Forth) -> Result<(), Error> {
+    let addr = forth.pop()? as usize;
+    let val = forth.memory.get(addr).ok_or(InvalidAddress)?;
+    forth.push(*val);
     Ok(())
 }

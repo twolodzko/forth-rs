@@ -6,6 +6,7 @@ pub enum Error {
     UnknownWord(String),
     Redefined(String),
     ParsingError,
+    InvalidAddress,
 }
 
 impl Display for Error {
@@ -16,6 +17,7 @@ impl Display for Error {
             UnknownWord(word) => format!("{} is an unknown word", word),
             Redefined(name) => format!("{} was redefined", name),
             ParsingError => "parsing error".to_string(),
+            InvalidAddress => "invalid memory address".to_string(),
         };
         write!(f, "{}", msg)
     }

@@ -8,8 +8,7 @@ fn main() -> Result<()> {
 
     let mut rl = DefaultEditor::new()?;
     loop {
-        let readline = rl.readline("> ");
-        match readline {
+        match rl.readline("> ") {
             Ok(line) => {
                 let _ = rl.add_history_entry(line.as_str());
                 match forth.eval_string(&line) {
