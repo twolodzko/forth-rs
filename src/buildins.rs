@@ -11,14 +11,33 @@ const BUILDINS: &[(&str, Expr)] = &[
     // constants
     ("true", Constant(-1)),
     ("false", Constant(0)),
-    // callables
+    // math
     ("+", Callable(add)),
-    ("cr", Callable(cr)),
+    ("-", Callable(sub)),
+    ("*", Callable(mul)),
+    ("/", Callable(div)),
+    ("mod", Callable(rem)),
+    ("/mod", Callable(div_rem)),
+    ("abs", Callable(abs)),
+    ("negate", Callable(negate)),
+    // comparisons
+    ("=", Callable(eq)),
+    ("<>", Callable(ne)),
+    ("<", Callable(lt)),
+    (">", Callable(gt)),
+    ("and", Callable(and)),
+    ("or", Callable(or)),
+    // stack
     ("dup", Callable(dup)),
     ("drop", Callable(drop)),
     ("swap", Callable(swap)),
+    ("rot", Callable(rot)),
+    ("over", Callable(over)),
+    // i/o
+    ("cr", Callable(cr)),
     (".", Callable(dot)),
     ("emit", Callable(emit)),
+    // helpers
     (".s", Callable(print_stack)),
     ("words", Callable(words)),
     // compile-only words and the words handled specially by parser
@@ -31,13 +50,14 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("constant", Dummy),
     (".(", Dummy),
     (".\"", Dummy),
-    // ("do", CompileOnly),
-    // ("begin", CompileOnly),
-    // ("loop", CompileOnly),
-    // ("+loop", CompileOnly),
-    // ("again", CompileOnly),
-    // ("while", CompileOnly),
-    // ("until", CompileOnly),
+    // ("do", Dummy),
+    // ("begin", Dummy),
+    // ("loop", Dummy),
+    // ("+loop", Dummy),
+    // ("again", Dummy),
+    // ("while", Dummy),
+    // ("until", Dummy),
+    // ("leave", Dummy),
 ];
 
 impl Forth {
@@ -59,20 +79,106 @@ impl Forth {
     }
 }
 
-/// `+ (a b -- c)`
+/// `+ (n1 n2 -- sum)`
 fn add(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(a.saturating_add(b));
+    forth.stack.push(b.saturating_add(a));
     Ok(())
 }
 
-/// `cr (--)`
-fn cr(_: &mut Forth) -> Result<(), Error> {
-    println!();
+/// `- (n1 n2 -- diff)`
+fn sub(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(b.saturating_sub(a));
     Ok(())
 }
 
-/// `swap (a b -- b a)`
+/// `* (n1 n2 -- prod)`
+fn mul(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(b.saturating_mul(a));
+    Ok(())
+}
+
+/// `/ (n1 n2 -- quot)`
+fn div(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(b / a);
+    Ok(())
+}
+
+/// `mod (n1 n2 -- rem)`
+fn rem(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(b % a);
+    Ok(())
+}
+
+/// `/mod (n1 n2 -- rem quot)`
+fn div_rem(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(b / a);
+    forth.stack.push(b % a);
+    Ok(())
+}
+
+/// `abs (n -- u)`
+fn abs(forth: &mut Forth) -> Result<(), Error> {
+    let num = forth.pop()?;
+    forth.push(num.abs());
+    Ok(())
+}
+
+/// `negate (-n|+n -- +n|-n)`
+fn negate(forth: &mut Forth) -> Result<(), Error> {
+    let num = forth.pop()?;
+    forth.push(-num);
+    Ok(())
+}
+
+/// `= (n1 n2 -- flag)`
+fn eq(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(if b == a { -1 } else { 0 });
+    Ok(())
+}
+
+/// `<> (n1 n2 -- flag)`
+fn ne(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(if b != a { -1 } else { 0 });
+    Ok(())
+}
+
+/// `< (n1 n2 -- flag)`
+fn lt(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(if b < a { -1 } else { 0 });
+    Ok(())
+}
+
+/// `> (n1 n2 -- flag)`
+fn gt(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(if b > a { -1 } else { 0 });
+    Ok(())
+}
+
+/// `and (n1 n2 -- n3)`
+fn and(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(if b != 0 { a } else { b });
+    Ok(())
+}
+
+/// `or (n1 n2 -- n3)`
+fn or(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.stack.push(if b != 0 { b } else { a });
+    Ok(())
+}
+
+/// `swap (n1 n2 -- n2 n1)`
 fn swap(forth: &mut Forth) -> Result<(), Error> {
     let n = forth.stack.len();
     if n < 2 {
@@ -82,7 +188,7 @@ fn swap(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
-/// `dup (a -- a a)`
+/// `dup (n -- n n)`
 fn dup(forth: &mut Forth) -> Result<(), Error> {
     if let Some(val) = forth.stack.last() {
         forth.push(*val);
@@ -92,9 +198,57 @@ fn dup(forth: &mut Forth) -> Result<(), Error> {
     }
 }
 
-/// `drop (a --)`
+/// `drop (n --)`
 fn drop(forth: &mut Forth) -> Result<(), Error> {
     forth.pop()?;
+    Ok(())
+}
+
+/// `rot (n1 n2 n3 -- n2 n3 n1)`
+fn rot(forth: &mut Forth) -> Result<(), Error> {
+    let n = forth.stack.len();
+    if n < 3 {
+        return Err(StackUnderflow);
+    }
+    forth.stack.swap(n - 2, n - 3);
+    forth.stack.swap(n - 1, n - 2);
+    Ok(())
+}
+
+/// `over (n1 n2 -- n1 n2 n1)`
+fn over(forth: &mut Forth) -> Result<(), Error> {
+    let n = forth.stack.len();
+    match forth.stack.get(n - 2) {
+        None => Err(StackUnderflow),
+        Some(val) => {
+            forth.push(*val);
+            Ok(())
+        }
+    }
+}
+
+/// `cr (--)`
+fn cr(_: &mut Forth) -> Result<(), Error> {
+    println!();
+    Ok(())
+}
+
+/// `. (n --)`
+fn dot(forth: &mut Forth) -> Result<(), Error> {
+    print!("{}", forth.pop()?);
+    Ok(())
+}
+
+/// `emit (n --)`
+fn emit(forth: &mut Forth) -> Result<(), Error> {
+    let val = forth.pop()?;
+    if let Ok(u) = val.try_into() {
+        if let Some(c) = char::from_u32(u) {
+            print!("{}", c);
+            return Ok(());
+        }
+    }
+    print!("�");
     Ok(())
 }
 
@@ -110,31 +264,12 @@ fn print_stack(forth: &mut Forth) -> Result<(), Error> {
         .join(" ");
     let n = forth.stack.len();
     let dots = if n > show_max { "..." } else { "" };
-    print!("<{}> {}{}", forth.stack.len(), stack, dots);
+    print!(" <{}> {}{}", forth.stack.len(), stack, dots);
     Ok(())
 }
 
 /// `words (--)`
 fn words(forth: &mut Forth) -> Result<(), Error> {
     print!("{}", forth.words().join(" "));
-    Ok(())
-}
-
-/// `. (-- a)`
-fn dot(forth: &mut Forth) -> Result<(), Error> {
-    print!("{} ", forth.pop()?);
-    Ok(())
-}
-
-/// `emit (a --)`
-fn emit(forth: &mut Forth) -> Result<(), Error> {
-    let val = forth.pop()?;
-    if let Ok(u) = val.try_into() {
-        if let Some(c) = char::from_u32(u) {
-            print!("{}", c);
-            return Ok(());
-        }
-    }
-    print!("�");
     Ok(())
 }
