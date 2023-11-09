@@ -123,8 +123,8 @@ fn rem(forth: &mut Forth) -> Result<(), Error> {
 /// `/mod (n1 n2 -- rem quot)`
 fn div_rem(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.stack.push(a / b);
     forth.stack.push(a % b);
+    forth.stack.push(a / b);
     Ok(())
 }
 
@@ -224,13 +224,12 @@ fn rot(forth: &mut Forth) -> Result<(), Error> {
 /// `over (n1 n2 -- n1 n2 n1)`
 fn over(forth: &mut Forth) -> Result<(), Error> {
     let n = forth.stack.len();
-    match forth.stack.get(n - 2) {
-        None => Err(StackUnderflow),
-        Some(val) => {
-            forth.push(*val);
-            Ok(())
-        }
+    if n < 2 {
+        return Err(StackUnderflow);
     }
+    let val = forth.stack.get(n - 2).unwrap();
+    forth.push(*val);
+    Ok(())
 }
 
 /// `cr (--)`

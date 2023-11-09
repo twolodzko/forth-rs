@@ -5,7 +5,7 @@ use crate::{
 
 pub type Int = i32;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Expr {
     /// Execute the function related to this word.
     Word(String),
@@ -81,7 +81,7 @@ pub mod imp {
         Ok(())
     }
 
-    #[derive(Clone)]
+    #[derive(Clone, PartialEq, Debug)]
     pub struct Function {
         pub body: Vec<Expr>,
     }
@@ -93,7 +93,7 @@ pub mod imp {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Clone, PartialEq, Debug)]
     pub struct IfThenElse {
         pub then: Vec<Expr>,
         pub other: Vec<Expr>,

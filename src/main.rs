@@ -1,12 +1,10 @@
 use forth_rs::Forth;
-use rustyline::{error::ReadlineError, DefaultEditor, Result};
+use rustyline::{error::ReadlineError, DefaultEditor};
 
-fn main() -> Result<()> {
-    let mut forth = Forth::new(1024);
-
+fn repl(forth: &mut Forth) {
     println!("Press ^C to exit.\n");
 
-    let mut rl = DefaultEditor::new()?;
+    let mut rl = DefaultEditor::new().unwrap();
     loop {
         match rl.readline("> ") {
             Ok(line) => {
@@ -25,5 +23,10 @@ fn main() -> Result<()> {
             }
         }
     }
-    Ok(())
+}
+
+fn main() {
+    let mut forth = Forth::new(1024);
+
+    repl(&mut forth);
 }

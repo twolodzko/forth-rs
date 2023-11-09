@@ -6,4 +6,4 @@ docs:
     cargo doc --no-deps --open
 
 repl:
-    cargo run --
+    RUST_BACKTRACE=1 cargo run --
