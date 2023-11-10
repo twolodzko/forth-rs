@@ -1,5 +1,5 @@
 use crate::{
-    errors::Error::{self, InvalidAddress, StackUnderflow},
+    errors::Error::{self, DivisionByZero, InvalidAddress, LeaveLoop, StackUnderflow},
     expressions::{
         Expr::{self, Callable, Constant, Dummy},
         Int,
@@ -53,14 +53,15 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("constant", Dummy),
     (".(", Dummy),
     (".\"", Dummy),
+    // looping
+    ("leave", Callable(leave)),
+    ("while", Callable(while_cond)),
+    ("until", Callable(until)),
+    ("begin", Dummy),
+    ("again", Dummy),
     // ("do", Dummy),
-    // ("begin", Dummy),
     // ("loop", Dummy),
     // ("+loop", Dummy),
-    // ("again", Dummy),
-    // ("while", Dummy),
-    // ("until", Dummy),
-    // ("leave", Dummy),
 ];
 
 impl Forth {
@@ -109,6 +110,9 @@ fn mul(forth: &mut Forth) -> Result<(), Error> {
 /// `/ (n1 n2 -- quot)`
 fn div(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
+    if b == 0 {
+        return Err(DivisionByZero);
+    }
     forth.stack.push(a / b);
     Ok(())
 }
@@ -116,6 +120,9 @@ fn div(forth: &mut Forth) -> Result<(), Error> {
 /// `mod (n1 n2 -- rem)`
 fn rem(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
+    if b == 0 {
+        return Err(DivisionByZero);
+    }
     forth.stack.push(a % b);
     Ok(())
 }
@@ -123,6 +130,9 @@ fn rem(forth: &mut Forth) -> Result<(), Error> {
 /// `/mod (n1 n2 -- rem quot)`
 fn div_rem(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
+    if b == 0 {
+        return Err(DivisionByZero);
+    }
     forth.stack.push(a % b);
     forth.stack.push(a / b);
     Ok(())
@@ -295,5 +305,28 @@ fn fetch(forth: &mut Forth) -> Result<(), Error> {
     let addr = forth.pop()? as usize;
     let val = forth.memory.get(addr).ok_or(InvalidAddress)?;
     forth.push(*val);
+    Ok(())
+}
+
+/// `leave (--)`
+fn leave(_: &mut Forth) -> Result<(), Error> {
+    Err(LeaveLoop)
+}
+
+/// `while (n --)`
+fn while_cond(forth: &mut Forth) -> Result<(), Error> {
+    let flag = forth.pop()?;
+    if flag == 0 {
+        return Err(LeaveLoop);
+    }
+    Ok(())
+}
+
+/// `until (n --)`
+fn until(forth: &mut Forth) -> Result<(), Error> {
+    let flag = forth.pop()?;
+    if flag != 0 {
+        return Err(LeaveLoop);
+    }
     Ok(())
 }

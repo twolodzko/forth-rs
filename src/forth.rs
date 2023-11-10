@@ -33,7 +33,6 @@ impl Forth {
         let mut parser = Parser::from(string);
         while let Some(result) = self.eval_next(&mut parser) {
             result.map_err(|err| {
-                // clear stack on error
                 self.stack.clear();
                 err
             })?;

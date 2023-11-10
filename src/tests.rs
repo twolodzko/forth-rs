@@ -1,5 +1,5 @@
 use crate::{
-    errors::Error::{self, StackUnderflow},
+    errors::Error::{self, DivisionByZero, StackUnderflow},
     expressions::Int,
     forth::Forth,
 };
@@ -45,7 +45,19 @@ use test_case::test_case;
 #[test_case("drop", &[1, 2, 3, 4], &[1, 2, 3]; "drop")]
 #[test_case("rot", &[1, 2, 3, 4], &[1, 3, 4, 2]; "rot")]
 #[test_case("over", &[1, 2], &[1, 2, 1]; "over")]
-fn eval(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
+#[test_case("if 10 then", &[-1], &[10]; "if-then true branch")]
+#[test_case("if 10 then", &[0], &[]; "if-then false branch")]
+#[test_case("if 10 else 20 then", &[-1], &[10]; "if-else-then true branch")]
+#[test_case("if 10 else 20 then", &[0], &[20]; "if-else-then false branch")]
+#[test_case(": f 42 ; f", &[], &[42]; "trivial function")]
+#[test_case(": f if 10 else 20 then ; f", &[-1], &[10]; "function with if-else-then true branch")]
+#[test_case(": f if 10 else 20 then ; f", &[0], &[20]; "function with if-else-then false branch")]
+#[test_case("begin 1 + dup 10 > until", &[0], &[11]; "begin until loop")]
+#[test_case("begin 1 + dup 10 < while repeat", &[0], &[10]; "begin while loop")]
+#[test_case("begin leave again", &[], &[]; "begin leave again")]
+#[test_case("begin -1 if leave then again", &[], &[]; "conditionally leave begin again loop")]
+#[test_case("begin 1 + dup 10 > if leave then again", &[0], &[11]; "begin again")]
+fn eval_string(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
     let mut forth = Forth::new(10);
     forth.stack = init_stack.to_vec();
     assert!(forth.eval_string(word).is_ok());
@@ -98,6 +110,19 @@ fn underflow_for_empty_stack(word: &str) {
     let mut forth = Forth::new(10);
     forth.stack.clear();
     assert_eq!(forth.eval_string(word), Err(StackUnderflow), "empty stack");
+}
+
+#[test_case("1 0 /", DivisionByZero; "div division by zero")]
+#[test_case("1 0 mod", DivisionByZero; "mod division by zero")]
+#[test_case("1 0 /mod", DivisionByZero; "div mod division by zero")]
+#[test_case("-1 if 1 0 / then", DivisionByZero; "if-then propagates errors")]
+#[test_case("-1 if 1 0 / else 0 then", DivisionByZero; "if-then-else propagates errors on true branch")]
+#[test_case("0 if 0 else 1 0 / then", DivisionByZero; "if-then-else propagates errors on false branch")]
+#[test_case(": f 1 0 / . 2 2 + ; f", DivisionByZero; "function propagates errors")]
+#[test_case("begin 1 0 / again", DivisionByZero; "begin loop propagates errors")]
+fn errors(code: &str, err: Error) {
+    let mut forth = Forth::new(10);
+    assert_eq!(forth.eval_string(code), Err(err));
 }
 
 #[test]

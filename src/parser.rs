@@ -1,6 +1,6 @@
 use crate::expressions::{
-    imp,
-    Expr::{self, IfThenElse, NewConstant, NewFunction, NewVariable, Print, Word},
+    imp::{self},
+    Expr::{self, Begin, IfElseThen, NewConstant, NewFunction, NewVariable, Print, Word},
 };
 use std::{iter::Peekable, str::Chars};
 
@@ -63,6 +63,9 @@ impl<'a> Parser<'a> {
     }
 
     fn read_function(&mut self) -> Option<Expr> {
+        // Read the block:
+        // : <name> <body...> ;
+
         self.skip_whitespaces();
 
         let name = self.read_word();
@@ -85,26 +88,67 @@ impl<'a> Parser<'a> {
         Some(NewFunction(name, func))
     }
 
-    fn read_ite(&mut self) -> Option<Expr> {
+    fn read_iet(&mut self) -> Option<Expr> {
+        // Read the block:
+        // if <then...> then
+        // if <then...> else <otherwise...> then
+
         let mut acc = Vec::new();
         let mut then = Vec::new();
+        let mut other = Vec::new();
+        let mut had_else = false;
 
         for ref expr in self.by_ref() {
             if let Word(word) = expr {
                 match word.as_str() {
-                    "then" => {
+                    // the else block starts
+                    "else" => {
                         then = acc.clone();
                         acc.clear();
+                        had_else = true;
+                        continue;
                     }
-                    "else" => break,
+                    // the definition ends
+                    "then" => break,
                     _ => (),
                 }
             }
-            acc.push(expr.clone());
+            acc.push(expr.clone())
         }
-        let other = acc.clone();
 
-        Some(IfThenElse(imp::IfThenElse { then, other }))
+        if had_else {
+            other = acc.clone();
+        } else {
+            then = acc.clone();
+        }
+
+        Some(IfElseThen(imp::IfElseThen { then, other }))
+    }
+
+    fn read_begin(&mut self) -> Option<Expr> {
+        // Read the block:
+        // begin <body...> again
+        // begin <body...> <flag> until
+        // begin <body...> <flag> while <body...> repeat
+
+        let mut body = Vec::new();
+
+        for ref expr in self.by_ref() {
+            if let Word(word) = expr {
+                match word.as_str() {
+                    // end of block
+                    "repeat" | "again" => break,
+                    // end of block, but take the "until" word
+                    "until" => {
+                        body.push(expr.clone());
+                        break;
+                    }
+                    _ => (),
+                }
+            }
+            body.push(expr.clone())
+        }
+        Some(Begin(imp::Begin { body }))
     }
 }
 
@@ -138,7 +182,7 @@ impl<'a> Iterator for Parser<'a> {
                 print!("{}", string);
                 self.next()
             }
-            // bindings:
+            // special forms
             ":" => self.read_function(),
             "variable" => {
                 let name = self.read_word();
@@ -148,8 +192,10 @@ impl<'a> Iterator for Parser<'a> {
                 let name = self.read_word();
                 Some(NewConstant(name))
             }
-            "if" => self.read_ite(),
-            // other words:
+            "if" => self.read_iet(),
+            // loops
+            "begin" => self.read_begin(),
+            // other words
             word => Some(Word(word.to_string())),
         }
     }

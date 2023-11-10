@@ -1,5 +1,5 @@
 use crate::{
-    errors::Error::{self, UnknownWord},
+    errors::Error::{self, CompileTimeWord, UnknownWord},
     forth::Forth,
 };
 
@@ -18,7 +18,9 @@ pub enum Expr {
     /// A function that can be executed.
     Function(imp::Function),
     /// If-then-else block.
-    IfThenElse(imp::IfThenElse),
+    IfElseThen(imp::IfElseThen),
+    /// Begin loop
+    Begin(imp::Begin),
     /// Create a new constant.
     NewConstant(String),
     /// Push the constant to the stack.
@@ -54,7 +56,8 @@ impl Expr {
                 forth.define_word(name, func)
             }
             Function(func) => func.execute(forth),
-            IfThenElse(body) => body.execute(forth),
+            IfElseThen(body) => body.execute(forth),
+            Begin(body) => body.execute(forth),
             Constant(val) => {
                 forth.push(*val);
                 Ok(())
@@ -64,18 +67,22 @@ impl Expr {
                 forth.define_word(name, Constant(value))
             }
             NewVariable(name) => forth.insert_variable(name, 0),
-            Dummy => Ok(()),
+            Dummy => Err(CompileTimeWord),
         }
     }
 }
 
 pub mod imp {
     use super::Expr;
-    use crate::{errors::Error, forth::Forth};
+    use crate::{
+        errors::Error::{self, LeaveLoop},
+        forth::Forth,
+    };
 
     #[inline]
     fn execute_many(forth: &mut Forth, body: &[Expr]) -> Result<(), Error> {
         for obj in body {
+            dbg!(obj);
             obj.execute(forth)?;
         }
         Ok(())
@@ -94,12 +101,12 @@ pub mod imp {
     }
 
     #[derive(Clone, PartialEq, Debug)]
-    pub struct IfThenElse {
+    pub struct IfElseThen {
         pub then: Vec<Expr>,
         pub other: Vec<Expr>,
     }
 
-    impl IfThenElse {
+    impl IfElseThen {
         #[inline]
         pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
             if forth.pop()? != 0 {
@@ -107,6 +114,24 @@ pub mod imp {
             } else {
                 execute_many(forth, &self.other)
             }
+        }
+    }
+
+    #[derive(Clone, PartialEq, Debug)]
+    pub struct Begin {
+        pub body: Vec<Expr>,
+    }
+
+    impl Begin {
+        #[inline]
+        pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
+            loop {
+                match execute_many(forth, &self.body) {
+                    Err(LeaveLoop) => break,
+                    result => result?,
+                }
+            }
+            Ok(())
         }
     }
 }

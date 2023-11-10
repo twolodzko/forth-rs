@@ -7,6 +7,9 @@ pub enum Error {
     Redefined(String),
     ParsingError,
     InvalidAddress,
+    LeaveLoop,
+    DivisionByZero,
+    CompileTimeWord,
 }
 
 impl Display for Error {
@@ -18,6 +21,9 @@ impl Display for Error {
             Redefined(name) => format!("{} was redefined", name),
             ParsingError => "parsing error".to_string(),
             InvalidAddress => "invalid memory address".to_string(),
+            LeaveLoop => "leaving the loop".to_string(),
+            DivisionByZero => "division by zero".to_string(),
+            CompileTimeWord => "interpreting a compile-only word".to_string(),
         };
         write!(f, "{}", msg)
     }
