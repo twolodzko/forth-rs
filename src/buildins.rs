@@ -16,10 +16,14 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("-", Callable(sub)),
     ("*", Callable(mul)),
     ("/", Callable(div)),
+    ("*/", Callable(mul_div)),
+    ("*/mod", Callable(mul_div_rem)),
     ("mod", Callable(rem)),
     ("/mod", Callable(div_rem)),
     ("abs", Callable(abs)),
     ("negate", Callable(negate)),
+    ("2*", Callable(mul2)),
+    ("2/", Callable(div2)),
     // comparisons
     ("=", Callable(eq)),
     ("<>", Callable(ne)),
@@ -138,6 +142,42 @@ fn div_rem(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
+#[inline]
+fn saturating_i64_to_i32(value: i64) -> i32 {
+    if value < i32::MIN as i64 {
+        i32::MIN
+    } else if value > i32::MAX as i64 {
+        i32::MAX
+    } else {
+        value as i32
+    }
+}
+
+/// `*/ (n1 n2 n3 -- n4)`
+fn mul_div(forth: &mut Forth) -> Result<(), Error> {
+    let c = forth.pop()?;
+    if c == 0 {
+        return Err(DivisionByZero);
+    }
+    let (a, b) = forth.pop2()?;
+    let (a, b, c) = (a as i64, b as i64, c as i64);
+    forth.push(saturating_i64_to_i32(a * b / c));
+    Ok(())
+}
+
+/// `*/mod (n1 n2 n3 -- n4 n5)`
+fn mul_div_rem(forth: &mut Forth) -> Result<(), Error> {
+    let c = forth.pop()?;
+    if c == 0 {
+        return Err(DivisionByZero);
+    }
+    let (a, b) = forth.pop2()?;
+    let (a, b, c) = (a as i64, b as i64, c as i64);
+    forth.push(saturating_i64_to_i32(a * b % c));
+    forth.push(saturating_i64_to_i32(a * b / c));
+    Ok(())
+}
+
 /// `abs (n -- u)`
 fn abs(forth: &mut Forth) -> Result<(), Error> {
     let num = forth.pop()?;
@@ -149,6 +189,20 @@ fn abs(forth: &mut Forth) -> Result<(), Error> {
 fn negate(forth: &mut Forth) -> Result<(), Error> {
     let num = forth.pop()?;
     forth.push(-num);
+    Ok(())
+}
+
+/// `2* (n -- prod)`
+fn mul2(forth: &mut Forth) -> Result<(), Error> {
+    let a = forth.pop()?;
+    forth.stack.push(a << 1);
+    Ok(())
+}
+
+/// `2/ (n -- quot)`
+fn div2(forth: &mut Forth) -> Result<(), Error> {
+    let a = forth.pop()?;
+    forth.stack.push(a >> 1);
     Ok(())
 }
 
