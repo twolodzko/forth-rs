@@ -5,9 +5,18 @@ use crate::{
 };
 
 const BUILDINS: &[(&str, Expr)] = &[
-    // constants
+    // logic
     ("true", Constant(-1)),
     ("false", Constant(0)),
+    ("not", Callable(not)),
+    ("and", Callable(and)),
+    ("or", Callable(or)),
+    ("xor", Callable(xor)),
+    // comparisons
+    ("=", Callable(eq)),
+    ("<>", Callable(ne)),
+    ("<", Callable(lt)),
+    (">", Callable(gt)),
     // math
     ("+", Callable(add)),
     ("-", Callable(sub)),
@@ -21,15 +30,6 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("negate", Callable(negate)),
     ("2*", Callable(mul2)),
     ("2/", Callable(div2)),
-    // comparisons
-    ("=", Callable(eq)),
-    ("<>", Callable(ne)),
-    ("<", Callable(lt)),
-    (">", Callable(gt)),
-    ("not", Callable(not)),
-    ("and", Callable(and)),
-    ("or", Callable(or)),
-    ("xor", Callable(xor)),
     // data stack
     ("dup", Callable(dup)),
     ("drop", Callable(drop)),
@@ -37,11 +37,14 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("rot", Callable(rot)),
     ("over", Callable(over)),
     ("depth", Callable(depth)),
+    (".s", Callable(print_stack)),
     // return stack
     (">r", Callable(to_return)),
     ("r>", Callable(from_return)),
     ("r@", Callable(copy_from_return)),
-    // variables
+    // constants and variables
+    ("constant", Dummy),
+    ("variable", Dummy),
     ("!", Callable(set)),
     ("@", Callable(fetch)),
     // i/o
@@ -49,7 +52,6 @@ const BUILDINS: &[(&str, Expr)] = &[
     (".", Callable(dot)),
     ("emit", Callable(emit)),
     // helpers
-    (".s", Callable(print_stack)),
     ("words", Callable(words)),
     // compile-only words and the words handled specially by parser
     ("if", Dummy),
@@ -57,8 +59,6 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("else", Dummy),
     (";", Dummy),
     (":", Dummy),
-    ("variable", Dummy),
-    ("constant", Dummy),
     (".(", Dummy),
     (".\"", Dummy),
     // looping
