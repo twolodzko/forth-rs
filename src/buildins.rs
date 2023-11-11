@@ -40,6 +40,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("over", Callable(over)),
     ("depth", Callable(depth)),
     (".s", Callable(print_stack)),
+    ("clearstack", Callable(clearstack)),
     // return stack
     (">r", Callable(to_return)),
     ("r>", Callable(from_return)),
@@ -155,6 +156,7 @@ fn saturating_i64_to_i32(value: i64) -> i32 {
 }
 
 /// `*/ (n1 n2 n3 -- n4)`
+/// `n1 * n2 / n3`, but make the calculation using double precision numbers.
 fn mul_div(forth: &mut Forth) -> Result<(), Error> {
     let c = forth.pop()?;
     if c == 0 {
@@ -167,6 +169,7 @@ fn mul_div(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `*/mod (n1 n2 n3 -- n4 n5)`
+/// `n1 * n2 / n3` and `n1 * n2 % n3`, but make the calculation using double precision numbers.
 fn mul_div_rem(forth: &mut Forth) -> Result<(), Error> {
     let c = forth.pop()?;
     if c == 0 {
@@ -264,6 +267,7 @@ fn xor(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `swap (n1 n2 -- n2 n1)`
+/// Swap the two values on the top of the stack.
 fn swap(forth: &mut Forth) -> Result<(), Error> {
     let n = forth.data_stack.len();
     if n < 2 {
@@ -274,6 +278,7 @@ fn swap(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `dup (n -- n n)`
+/// Duplicate value from the top of the stack.
 fn dup(forth: &mut Forth) -> Result<(), Error> {
     if let Some(val) = forth.data_stack.last() {
         forth.push(*val);
@@ -284,6 +289,7 @@ fn dup(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `pick (ni ... n0 i -- ni ... n0 ni )`
+/// Copy i-th value to the top of the stack.
 fn pick(forth: &mut Forth) -> Result<(), Error> {
     let index = forth.pop()?;
     let n = forth.data_stack.len();
@@ -296,6 +302,7 @@ fn pick(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `roll (ni ... n0 i -- ni-1 ... n0 ni )`
+/// Move i-th value to the top of the stack.
 fn roll(forth: &mut Forth) -> Result<(), Error> {
     let index = forth.pop()?;
     let n = forth.data_stack.len();
@@ -307,7 +314,14 @@ fn roll(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
+/// `clearstack (--)`
+fn clearstack(forth: &mut Forth) -> Result<(), Error> {
+    forth.data_stack.clear();
+    Ok(())
+}
+
 /// `drop (n --)`
+/// Drop the value from the top of the stack.
 fn drop(forth: &mut Forth) -> Result<(), Error> {
     forth.pop()?;
     Ok(())
@@ -336,18 +350,21 @@ fn over(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `cr (--)`
+/// Print newline.
 fn cr(_: &mut Forth) -> Result<(), Error> {
     println!();
     Ok(())
 }
 
 /// `. (n --)`
+/// Take the value from the top of the stack and print it followed by space.
 fn dot(forth: &mut Forth) -> Result<(), Error> {
     print!("{} ", forth.pop()?);
     Ok(())
 }
 
 /// `emit (n --)`
+/// Take the value from the top of the stack and print it as a character.
 fn emit(forth: &mut Forth) -> Result<(), Error> {
     let val = forth.pop()?;
     if let Ok(u) = val.try_into() {
@@ -361,6 +378,7 @@ fn emit(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `.s (--)`
+/// Print the stack and it's size.
 fn print_stack(forth: &mut Forth) -> Result<(), Error> {
     let show_max = 10;
     let stack = forth
@@ -377,12 +395,14 @@ fn print_stack(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `words (--)`
+/// Print all the available words.
 fn words(forth: &mut Forth) -> Result<(), Error> {
     print!("{}", forth.words().join(" "));
     Ok(())
 }
 
 /// `! (n addr --)`
+/// Set the the variable at addr to n.
 fn set(forth: &mut Forth) -> Result<(), Error> {
     let (val, addr) = forth.pop2()?;
     let addr = addr as usize;
@@ -394,6 +414,7 @@ fn set(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `@ (addr -- n)`
+/// Get the value of the variable at addr.
 fn fetch(forth: &mut Forth) -> Result<(), Error> {
     let addr = forth.pop()? as usize;
     let val = forth.memory.get(addr).ok_or(InvalidAddress)?;
@@ -402,11 +423,13 @@ fn fetch(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `leave (--)`
+/// Break the loop.
 fn leave(_: &mut Forth) -> Result<(), Error> {
     Err(LeaveLoop)
 }
 
 /// `while (n --)`
+/// If flag is false, break the loop.
 fn while_cond(forth: &mut Forth) -> Result<(), Error> {
     let flag = forth.pop()?;
     if flag == 0 {
@@ -416,6 +439,7 @@ fn while_cond(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `until (n --)`
+/// If flag is true, break the loop.
 fn until(forth: &mut Forth) -> Result<(), Error> {
     let flag = forth.pop()?;
     if flag != 0 {
@@ -425,6 +449,7 @@ fn until(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `depth (-- n)`
+/// The depth of the stack.
 fn depth(forth: &mut Forth) -> Result<(), Error> {
     forth.push(forth.data_stack.len() as i32);
     Ok(())

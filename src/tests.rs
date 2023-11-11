@@ -53,6 +53,7 @@ use test_case::test_case;
 #[test_case("variable X", &[], &[0]; "new variable")]
 #[test_case("3 pick", &[1, 2, 3, 4], &[1, 2, 3, 4, 2]; "pick")]
 #[test_case("3 roll", &[1, 2, 3, 4], &[1, 3, 4, 2]; "roll")]
+#[test_case("clearstack", &[1, 2, 3, 4], &[]; "clearstack")]
 #[test_case("swap", &[1, 2], &[2, 1]; "simple swap")]
 #[test_case("swap", &[1, 2, 3, 4], &[1, 2, 4, 3]; "swap with multiple elements on stack")]
 #[test_case("dup", &[1, 2], &[1, 2, 2]; "dup")]
