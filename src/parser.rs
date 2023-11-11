@@ -91,7 +91,6 @@ impl<'a> Parser<'a> {
     }
 
     fn read_iet(&mut self) -> Option<Expr> {
-        // Read the block:
         // if <then...> then
         // if <then...> else <otherwise...> then
 
@@ -128,7 +127,6 @@ impl<'a> Parser<'a> {
     }
 
     fn read_begin(&mut self) -> Option<Expr> {
-        // Read the block:
         // begin <body...> again
         // begin <body...> <flag> until
         // begin <body...> <flag> while <body...> repeat
@@ -154,6 +152,8 @@ impl<'a> Parser<'a> {
     }
 
     fn read_loop(&mut self) -> Option<Expr> {
+        // do ... loop
+
         let body = self
             .take_while(|expr| {
                 if let Word(word) = expr {

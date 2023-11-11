@@ -23,7 +23,6 @@ pub enum Expr {
     Begin(imp::Begin),
     /// Do-loop.
     Loop(imp::Loop),
-    PlusLoop(imp::PlusLoop),
     /// Create a new constant.
     NewConstant(String),
     /// Push the constant to the stack.
@@ -64,7 +63,6 @@ impl Expr {
             IfElseThen(body) => body.execute(forth),
             Begin(body) => body.execute(forth),
             Loop(body) => body.execute(forth),
-            PlusLoop(body) => body.execute(forth),
             Constant(val) => {
                 forth.push(*val);
                 Ok(())
@@ -154,6 +152,15 @@ pub mod imp {
         }
     }
 
+    macro_rules! maybe_break_loop {
+        ( $expr:expr ) => {
+            match $expr {
+                Err(LeaveLoop) => break,
+                result => result?,
+            }
+        };
+    }
+
     #[derive(Clone, PartialEq, Debug)]
     pub struct Begin {
         pub body: Vec<Expr>,
@@ -163,10 +170,7 @@ pub mod imp {
         #[inline]
         pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
             loop {
-                match execute_many(forth, &self.body) {
-                    Err(LeaveLoop) => break,
-                    result => result?,
-                }
+                maybe_break_loop!(execute_many(forth, &self.body))
             }
             Ok(())
         }
@@ -183,35 +187,8 @@ pub mod imp {
             let (limit, index) = forth.pop2()?;
             for i in index..limit {
                 forth.return_stack.push(i);
-                match execute_many(forth, &self.body) {
-                    Err(LeaveLoop) => break,
-                    result => result?,
-                }
+                maybe_break_loop!(execute_many(forth, &self.body));
                 forth.return_stack.pop();
-            }
-            Ok(())
-        }
-    }
-
-    #[derive(Clone, PartialEq, Debug)]
-    pub struct PlusLoop {
-        pub body: Vec<Expr>,
-        pub step: i32,
-    }
-
-    impl PlusLoop {
-        #[inline]
-        pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
-            let (limit, index) = forth.pop2()?;
-            let mut i = index;
-            while i < limit {
-                forth.return_stack.push(i);
-                match execute_many(forth, &self.body) {
-                    Err(LeaveLoop) => break,
-                    result => result?,
-                }
-                forth.return_stack.pop();
-                i += self.step;
             }
             Ok(())
         }
