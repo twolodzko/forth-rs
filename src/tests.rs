@@ -43,6 +43,8 @@ use test_case::test_case;
 #[test_case("or", &[0, -1], &[-1]; "or for false true")]
 #[test_case("or", &[-1, 0], &[-1]; "or for true false")]
 #[test_case("or", &[-1, -1], &[-1]; "or for true true")]
+#[test_case(r#"s" abc"#, &[], &[0, 3]; "new string")]
+#[test_case("variable X", &[], &[0]; "new variable")]
 #[test_case("swap", &[1, 2], &[2, 1]; "simple swap")]
 #[test_case("swap", &[1, 2, 3, 4], &[1, 2, 4, 3]; "swap with multiple elements on stack")]
 #[test_case("dup", &[1, 2], &[1, 2, 2]; "dup")]
@@ -63,11 +65,14 @@ use test_case::test_case;
 #[test_case("begin leave again", &[], &[]; "begin leave again")]
 #[test_case("begin -1 if leave then again", &[], &[]; "conditionally leave begin again loop")]
 #[test_case("begin 1 + dup 10 > if leave then again", &[0], &[11]; "begin again")]
+#[test_case("do i loop", &[5, 0], &[0, 1, 2, 3, 4]; "do loop")]
+// FIXME
+// #[test_case("3 0 do 2 0 do j i loop loop", &[], &[0, 0, 1, 2, 1, 0, 1, 2, 2, 0, 1, 2]; "nested do loop")]
 fn eval_string(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
     let mut forth = Forth::new(10);
-    forth.stack = init_stack.to_vec();
+    forth.data_stack = init_stack.to_vec();
     assert!(forth.eval_string(word).is_ok());
-    assert_eq!(expected_stack, forth.stack);
+    assert_eq!(expected_stack, forth.data_stack);
 }
 
 #[test_case("+"; "add")]
@@ -89,7 +94,7 @@ fn eval_string(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
 #[test_case("!"; "set variable")]
 fn underflow_for_one_value_on_stack(word: &str) {
     let mut forth = Forth::new(10);
-    forth.stack = vec![1];
+    forth.data_stack = vec![1];
     assert_eq!(forth.eval_string(word), Err(StackUnderflow),);
 }
 
@@ -118,7 +123,7 @@ fn underflow_for_one_value_on_stack(word: &str) {
 #[test_case("."; "emit")]
 fn underflow_for_empty_stack(word: &str) {
     let mut forth = Forth::new(10);
-    forth.stack.clear();
+    forth.data_stack.clear();
     assert_eq!(forth.eval_string(word), Err(StackUnderflow), "empty stack");
 }
 
@@ -165,13 +170,31 @@ fn variables() {
     let mut forth = Forth::new(10);
 
     assert!(forth.eval_string("variable x").is_ok());
+    assert_eq!(forth.data_stack, vec![0]);
     assert!(forth.eval_string("5 x !").is_ok());
     assert!(forth.eval_string("x @").is_ok());
-    assert_eq!(forth.stack, vec![5]);
+    assert_eq!(forth.data_stack, vec![0, 5]);
 
     assert!(forth.eval_string("7 x !").is_ok());
     assert!(forth.eval_string("x @").is_ok());
-    assert_eq!(forth.stack, vec![5, 7]);
+    assert_eq!(forth.data_stack, vec![0, 5, 7]);
 
     assert!(forth.eval_string("17 y !").is_err());
+}
+
+#[test]
+fn return_stack() {
+    let mut forth = Forth::new(10);
+
+    assert!(forth.eval_string("42 >r").is_ok());
+    assert_eq!(forth.data_stack, &[]);
+    assert_eq!(forth.return_stack, &[42]);
+
+    assert!(forth.eval_string("r@").is_ok());
+    assert_eq!(forth.data_stack, &[42]);
+    assert_eq!(forth.return_stack, &[42]);
+
+    assert!(forth.eval_string("r>").is_ok());
+    assert_eq!(forth.data_stack, &[42, 42]);
+    assert_eq!(forth.return_stack, &[]);
 }

@@ -11,7 +11,9 @@ use std::collections::HashMap;
 /// The Forth interpreter that walks over the code and executes it.
 pub struct Forth {
     /// Stack for storing the data.
-    pub stack: Vec<Int>,
+    pub data_stack: Vec<Int>,
+    /// The additional temporary memory.
+    pub(crate) return_stack: Vec<Int>,
     /// Dictionary mapping words to functions, constants, etc.
     dictionary: HashMap<String, Expr>,
     /// Memory for storing data related to named variables.
@@ -22,7 +24,8 @@ impl Forth {
     /// Constructs a new, empty Forth server with the stack with at least the specified capacity.
     pub(crate) fn empty(capacity: usize) -> Self {
         Self {
-            stack: Vec::with_capacity(capacity),
+            data_stack: Vec::with_capacity(capacity),
+            return_stack: Vec::new(),
             dictionary: HashMap::new(),
             memory: Vec::new(),
         }
@@ -33,7 +36,7 @@ impl Forth {
         let mut parser = Parser::from(string);
         while let Some(result) = self.eval_next(&mut parser) {
             result.map_err(|err| {
-                self.stack.clear();
+                self.data_stack.clear();
                 err
             })?;
         }
@@ -50,13 +53,21 @@ impl Forth {
     /// Push value to the stack.
     #[inline]
     pub(crate) fn push(&mut self, value: Int) {
-        self.stack.push(value)
+        self.data_stack.push(value)
     }
 
     /// Pop value from the stack.
     #[inline]
     pub(crate) fn pop(&mut self) -> Result<Int, Error> {
-        self.stack.pop().ok_or(StackUnderflow)
+        self.data_stack.pop().ok_or(StackUnderflow)
+    }
+
+    /// Pop two values from the stack, return them in the order they were entered into the stack.
+    #[inline]
+    pub(crate) fn pop2(&mut self) -> Result<(Int, Int), Error> {
+        let b = self.pop()?;
+        let a = self.pop()?;
+        Ok((a, b))
     }
 
     /// Define a new word, return an error on redefinition.

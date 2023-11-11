@@ -1,6 +1,9 @@
 use crate::expressions::{
     imp::{self},
-    Expr::{self, Begin, IfElseThen, NewConstant, NewFunction, NewVariable, Print, Word},
+    Expr::{
+        self, Begin, IfElseThen, Loop, NewConstant, NewFunction, NewString, NewVariable, Print,
+        Word,
+    },
 };
 use std::{iter::Peekable, str::Chars};
 
@@ -84,7 +87,6 @@ impl<'a> Parser<'a> {
             .collect();
 
         let func = imp::Function { body };
-
         Some(NewFunction(name, func))
     }
 
@@ -150,6 +152,19 @@ impl<'a> Parser<'a> {
         }
         Some(Begin(imp::Begin { body }))
     }
+
+    fn read_loop(&mut self) -> Option<Expr> {
+        let body = self
+            .take_while(|expr| {
+                if let Word(word) = expr {
+                    word != "loop"
+                } else {
+                    true
+                }
+            })
+            .collect();
+        Some(Loop(imp::Loop { body }))
+    }
 }
 
 impl<'a> Iterator for Parser<'a> {
@@ -173,14 +188,18 @@ impl<'a> Iterator for Parser<'a> {
                 self.next()
             }
             // strings
-            ".\"" => {
-                let string = self.read_until('"');
-                Some(Print(string))
-            }
             ".(" => {
                 let string = self.read_until(')');
                 print!("{}", string);
                 self.next()
+            }
+            ".\"" => {
+                let string = self.read_until('"');
+                Some(Print(string))
+            }
+            "s\"" => {
+                let string = self.read_until('"');
+                Some(NewString(string))
             }
             // special forms
             ":" => self.read_function(),
@@ -195,6 +214,7 @@ impl<'a> Iterator for Parser<'a> {
             "if" => self.read_iet(),
             // loops
             "begin" => self.read_begin(),
+            "do" => self.read_loop(),
             // other words
             word => Some(Word(word.to_string())),
         }

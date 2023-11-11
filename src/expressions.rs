@@ -21,12 +21,16 @@ pub enum Expr {
     IfElseThen(imp::IfElseThen),
     /// Begin loop
     Begin(imp::Begin),
+    /// Do-loop.
+    Loop(imp::Loop),
     /// Create a new constant.
     NewConstant(String),
     /// Push the constant to the stack.
     Constant(Int),
     /// Create a new constant holding the memory address of the variable.
     NewVariable(String),
+    /// Save a new string to the memory.
+    NewString(String),
     /// Placeholder for a reserved word.
     Dummy,
 }
@@ -58,18 +62,50 @@ impl Expr {
             Function(func) => func.execute(forth),
             IfElseThen(body) => body.execute(forth),
             Begin(body) => body.execute(forth),
+            Loop(body) => body.execute(forth),
             Constant(val) => {
                 forth.push(*val);
                 Ok(())
             }
             NewConstant(name) => {
+                // FIXME: do this only once!!!
                 let value = forth.pop()?;
                 forth.define_word(name, Constant(value))
             }
-            NewVariable(name) => forth.insert_variable(name, 0),
+            NewVariable(name) => {
+                // FIXME: do this only once!!!
+                forth.insert_variable(name, 0)?;
+                forth.push(forth.memory.len() as i32 - 1);
+                Ok(())
+            }
+            NewString(string) => {
+                // FIXME: do this only once!!!
+                let bytes = string_to_bytes(string);
+                let index = (forth.memory.len() as i32 - 1).max(0);
+                let length = bytes.len() as i32;
+                forth.memory.extend(bytes);
+                forth.push(index);
+                forth.push(length);
+                Ok(())
+            }
             Dummy => Err(CompileTimeWord),
         }
     }
+}
+
+#[inline]
+fn string_to_bytes(string: &str) -> Vec<i32> {
+    string.chars().map(|c| c as i32).collect()
+}
+
+// FIXME
+#[allow(dead_code)]
+#[inline]
+fn bytes_to_string(bytes: &[i32]) -> Option<String> {
+    bytes
+        .iter()
+        .map(|b| char::from_u32((*b).try_into().ok()?))
+        .collect()
 }
 
 pub mod imp {
@@ -82,7 +118,6 @@ pub mod imp {
     #[inline]
     fn execute_many(forth: &mut Forth, body: &[Expr]) -> Result<(), Error> {
         for obj in body {
-            dbg!(obj);
             obj.execute(forth)?;
         }
         Ok(())
@@ -130,6 +165,27 @@ pub mod imp {
                     Err(LeaveLoop) => break,
                     result => result?,
                 }
+            }
+            Ok(())
+        }
+    }
+
+    #[derive(Clone, PartialEq, Debug)]
+    pub struct Loop {
+        pub body: Vec<Expr>,
+    }
+
+    impl Loop {
+        #[inline]
+        pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
+            let (limit, index) = forth.pop2()?;
+            for i in index..limit {
+                forth.return_stack.push(i);
+                match execute_many(forth, &self.body) {
+                    Err(LeaveLoop) => break,
+                    result => result?,
+                }
+                forth.return_stack.pop();
             }
             Ok(())
         }
