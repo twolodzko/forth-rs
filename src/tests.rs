@@ -49,7 +49,6 @@ use test_case::test_case;
 #[test_case("xor", &[0, -1], &[-1]; "xor for false true")]
 #[test_case("xor", &[-1, 0], &[-1]; "xor for true false")]
 #[test_case("xor", &[-1, -1], &[0]; "xor for true true")]
-#[test_case(r#"s" abc"#, &[], &[0, 3]; "new string")]
 #[test_case("variable X", &[], &[0]; "new variable")]
 #[test_case("3 pick", &[1, 2, 3, 4], &[1, 2, 3, 4, 2]; "pick")]
 #[test_case("3 roll", &[1, 2, 3, 4], &[1, 3, 4, 2]; "roll")]
@@ -133,8 +132,8 @@ fn underflow_for_empty_stack(word: &str) {
 #[test_case("xor"; "xor")]
 #[test_case("swap"; "swap")]
 #[test_case("over"; "over")]
-#[test_case("pick"; "pick")]
-#[test_case("roll"; "roll")]
+#[test_case("1 pick"; "pick")]
+#[test_case("1 roll"; "roll")]
 #[test_case("!"; "set variable")]
 fn underflow_for_one_value_on_stack(word: &str) {
     let mut forth = Forth::new(10);

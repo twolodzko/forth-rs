@@ -29,8 +29,6 @@ pub enum Expr {
     Constant(Int),
     /// Create a new constant holding the memory address of the variable.
     NewVariable(String),
-    /// Save a new string to the memory.
-    NewString(String),
     /// Placeholder for a reserved word.
     Dummy,
 }
@@ -68,44 +66,17 @@ impl Expr {
                 Ok(())
             }
             NewConstant(name) => {
-                // FIXME: do this only once!!!
                 let value = forth.pop()?;
                 forth.define_word(name, Constant(value))
             }
             NewVariable(name) => {
-                // FIXME: do this only once!!!
                 forth.insert_variable(name, 0)?;
                 forth.push(forth.memory.len() as i32 - 1);
-                Ok(())
-            }
-            NewString(string) => {
-                // FIXME: do this only once!!!
-                let bytes = string_to_bytes(string);
-                let index = (forth.memory.len() as i32 - 1).max(0);
-                let length = bytes.len() as i32;
-                forth.memory.extend(bytes);
-                forth.push(index);
-                forth.push(length);
                 Ok(())
             }
             Dummy => Err(CompileTimeWord),
         }
     }
-}
-
-#[inline]
-fn string_to_bytes(string: &str) -> Vec<i32> {
-    string.chars().map(|c| c as i32).collect()
-}
-
-// FIXME
-#[allow(dead_code)]
-#[inline]
-fn bytes_to_string(bytes: &[i32]) -> Option<String> {
-    bytes
-        .iter()
-        .map(|b| char::from_u32((*b).try_into().ok()?))
-        .collect()
 }
 
 pub mod imp {

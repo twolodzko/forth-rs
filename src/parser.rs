@@ -1,9 +1,6 @@
 use crate::expressions::{
     imp::{self},
-    Expr::{
-        self, Begin, IfElseThen, Loop, NewConstant, NewFunction, NewString, NewVariable, Print,
-        Word,
-    },
+    Expr::{self, Begin, IfElseThen, Loop, NewConstant, NewFunction, NewVariable, Print, Word},
 };
 use std::{iter::Peekable, str::Chars};
 
@@ -196,10 +193,6 @@ impl<'a> Iterator for Parser<'a> {
             ".\"" => {
                 let string = self.read_until('"');
                 Some(Print(string))
-            }
-            "s\"" => {
-                let string = self.read_until('"');
-                Some(NewString(string))
             }
             // special forms
             ":" => self.read_function(),
