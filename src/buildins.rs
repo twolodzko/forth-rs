@@ -90,21 +90,21 @@ impl Forth {
 /// `+ (n1 n2 -- sum)`
 fn add(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(a.saturating_add(b));
+    forth.push(a.saturating_add(b));
     Ok(())
 }
 
 /// `- (n1 n2 -- diff)`
 fn sub(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(a.saturating_sub(b));
+    forth.push(a.saturating_sub(b));
     Ok(())
 }
 
 /// `* (n1 n2 -- prod)`
 fn mul(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(a.saturating_mul(b));
+    forth.push(a.saturating_mul(b));
     Ok(())
 }
 
@@ -114,7 +114,7 @@ fn div(forth: &mut Forth) -> Result<(), Error> {
     if b == 0 {
         return Err(DivisionByZero);
     }
-    forth.data_stack.push(a / b);
+    forth.push(a / b);
     Ok(())
 }
 
@@ -124,7 +124,7 @@ fn rem(forth: &mut Forth) -> Result<(), Error> {
     if b == 0 {
         return Err(DivisionByZero);
     }
-    forth.data_stack.push(a % b);
+    forth.push(a % b);
     Ok(())
 }
 
@@ -134,8 +134,8 @@ fn div_rem(forth: &mut Forth) -> Result<(), Error> {
     if b == 0 {
         return Err(DivisionByZero);
     }
-    forth.data_stack.push(a % b);
-    forth.data_stack.push(a / b);
+    forth.push(a % b);
+    forth.push(a / b);
     Ok(())
 }
 
@@ -192,63 +192,63 @@ fn negate(forth: &mut Forth) -> Result<(), Error> {
 /// `2* (n -- prod)`
 fn mul2(forth: &mut Forth) -> Result<(), Error> {
     let a = forth.pop()?;
-    forth.data_stack.push(a << 1);
+    forth.push(a << 1);
     Ok(())
 }
 
 /// `2/ (n -- quot)`
 fn div2(forth: &mut Forth) -> Result<(), Error> {
     let a = forth.pop()?;
-    forth.data_stack.push(a >> 1);
+    forth.push(a >> 1);
     Ok(())
 }
 
 /// `= (n1 n2 -- flag)`
 fn eq(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(if a == b { -1 } else { 0 });
+    forth.push(if a == b { -1 } else { 0 });
     Ok(())
 }
 
 /// `<> (n1 n2 -- flag)`
 fn ne(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(if a != b { -1 } else { 0 });
+    forth.push(if a != b { -1 } else { 0 });
     Ok(())
 }
 
 /// `< (n1 n2 -- flag)`
 fn lt(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(if a < b { -1 } else { 0 });
+    forth.push(if a < b { -1 } else { 0 });
     Ok(())
 }
 
 /// `> (n1 n2 -- flag)`
 fn gt(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(if a > b { -1 } else { 0 });
+    forth.push(if a > b { -1 } else { 0 });
     Ok(())
 }
 
 /// `and (n1 n2 -- n3)`
 fn and(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(if a != 0 { b } else { a });
+    forth.push(if a != 0 { b } else { a });
     Ok(())
 }
 
 /// `or (n1 n2 -- n3)`
 fn or(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(if a != 0 { a } else { b });
+    forth.push(if a != 0 { a } else { b });
     Ok(())
 }
 
 /// `xor (n1 n2 -- n3)`
 fn xor(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.data_stack.push(-((a != 0) as i32 ^ (b != 0) as i32));
+    forth.push(-((a != 0) as i32 ^ (b != 0) as i32));
     Ok(())
 }
 
