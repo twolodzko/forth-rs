@@ -28,6 +28,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     (">", Callable(gt)),
     ("and", Callable(and)),
     ("or", Callable(or)),
+    ("xor", Callable(xor)),
     // data stack
     ("dup", Callable(dup)),
     ("drop", Callable(drop)),
@@ -241,6 +242,13 @@ fn and(forth: &mut Forth) -> Result<(), Error> {
 fn or(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
     forth.data_stack.push(if a != 0 { a } else { b });
+    Ok(())
+}
+
+/// `xor (n1 n2 -- n3)`
+fn xor(forth: &mut Forth) -> Result<(), Error> {
+    let (a, b) = forth.pop2()?;
+    forth.data_stack.push(-((a != 0) as i32 ^ (b != 0) as i32));
     Ok(())
 }
 
