@@ -34,6 +34,8 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("dup", Callable(dup)),
     ("drop", Callable(drop)),
     ("swap", Callable(swap)),
+    ("pick", Callable(pick)),
+    ("roll", Callable(roll)),
     ("rot", Callable(rot)),
     ("over", Callable(over)),
     ("depth", Callable(depth)),
@@ -140,6 +142,7 @@ fn div_rem(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
+/// Transform i64 to i32 rounding the i64 values to the limits of i32.
 #[inline]
 fn saturating_i64_to_i32(value: i64) -> i32 {
     if value < i32::MIN as i64 {
@@ -278,6 +281,30 @@ fn dup(forth: &mut Forth) -> Result<(), Error> {
     } else {
         Err(StackUnderflow)
     }
+}
+
+/// `pick (ni ... n0 i -- ni ... n0 ni )`
+fn pick(forth: &mut Forth) -> Result<(), Error> {
+    let index = forth.pop()?;
+    let n = forth.data_stack.len();
+    if index < 0 || n <= index as usize {
+        return Err(StackUnderflow);
+    }
+    let value = forth.data_stack.get(n - index as usize).unwrap();
+    forth.push(*value);
+    Ok(())
+}
+
+/// `roll (ni ... n0 i -- ni-1 ... n0 ni )`
+fn roll(forth: &mut Forth) -> Result<(), Error> {
+    let index = forth.pop()?;
+    let n = forth.data_stack.len();
+    if index < 0 || n <= index as usize {
+        return Err(StackUnderflow);
+    }
+    let value = forth.data_stack.remove(n - index as usize);
+    forth.push(value);
+    Ok(())
 }
 
 /// `drop (n --)`

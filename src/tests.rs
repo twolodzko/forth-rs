@@ -51,6 +51,8 @@ use test_case::test_case;
 #[test_case("xor", &[-1, -1], &[0]; "xor for true true")]
 #[test_case(r#"s" abc"#, &[], &[0, 3]; "new string")]
 #[test_case("variable X", &[], &[0]; "new variable")]
+#[test_case("3 pick", &[1, 2, 3, 4], &[1, 2, 3, 4, 2]; "pick")]
+#[test_case("3 roll", &[1, 2, 3, 4], &[1, 3, 4, 2]; "roll")]
 #[test_case("swap", &[1, 2], &[2, 1]; "simple swap")]
 #[test_case("swap", &[1, 2, 3, 4], &[1, 2, 4, 3]; "swap with multiple elements on stack")]
 #[test_case("dup", &[1, 2], &[1, 2, 2]; "dup")]
@@ -84,30 +86,6 @@ fn eval_string(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
 #[test_case("-"; "sub")]
 #[test_case("*"; "mul")]
 #[test_case("/"; "div")]
-#[test_case("*/"; "mul div")]
-#[test_case("*/mod"; "mul div mod")]
-#[test_case("mod"; "modulo")]
-#[test_case("/mod"; "mod rem")]
-#[test_case("="; "equal")]
-#[test_case("<>"; "not equal")]
-#[test_case("<"; "less")]
-#[test_case(">"; "greater")]
-#[test_case("and"; "and")]
-#[test_case("or"; "or")]
-#[test_case("xor"; "xor")]
-#[test_case("swap"; "swap")]
-#[test_case("over"; "over")]
-#[test_case("!"; "set variable")]
-fn underflow_for_one_value_on_stack(word: &str) {
-    let mut forth = Forth::new(10);
-    forth.data_stack = vec![1];
-    assert_eq!(forth.eval_string(word), Err(StackUnderflow),);
-}
-
-#[test_case("+"; "add")]
-#[test_case("-"; "sub")]
-#[test_case("*"; "mul")]
-#[test_case("/"; "div")]
 #[test_case("mod"; "modulo")]
 #[test_case("/mod"; "mod rem")]
 #[test_case("*/"; "mul div")]
@@ -122,6 +100,8 @@ fn underflow_for_one_value_on_stack(word: &str) {
 #[test_case("xor"; "xor")]
 #[test_case("swap"; "swap")]
 #[test_case("over"; "over")]
+#[test_case("pick"; "pick")]
+#[test_case("roll"; "roll")]
 #[test_case("!"; "set variable")]
 #[test_case("dup"; "dup")]
 #[test_case("drop"; "drop")]
@@ -133,6 +113,42 @@ fn underflow_for_empty_stack(word: &str) {
     let mut forth = Forth::new(10);
     forth.data_stack.clear();
     assert_eq!(forth.eval_string(word), Err(StackUnderflow), "empty stack");
+}
+
+#[test_case("+"; "add")]
+#[test_case("-"; "sub")]
+#[test_case("*"; "mul")]
+#[test_case("/"; "div")]
+#[test_case("*/"; "mul div")]
+#[test_case("*/mod"; "mul div mod")]
+#[test_case("mod"; "modulo")]
+#[test_case("/mod"; "mod rem")]
+#[test_case("="; "equal")]
+#[test_case("<>"; "not equal")]
+#[test_case("<"; "less")]
+#[test_case(">"; "greater")]
+#[test_case("and"; "and")]
+#[test_case("or"; "or")]
+#[test_case("xor"; "xor")]
+#[test_case("swap"; "swap")]
+#[test_case("over"; "over")]
+#[test_case("pick"; "pick")]
+#[test_case("roll"; "roll")]
+#[test_case("!"; "set variable")]
+fn underflow_for_one_value_on_stack(word: &str) {
+    let mut forth = Forth::new(10);
+    forth.data_stack = vec![1];
+    assert_eq!(forth.eval_string(word), Err(StackUnderflow),);
+}
+
+#[test_case("*/"; "mul div")]
+#[test_case("*/mod"; "mul div mod")]
+#[test_case("2 pick"; "pick")]
+#[test_case("2 roll"; "roll")]
+fn underflow_for_two_value_on_stack(word: &str) {
+    let mut forth = Forth::new(10);
+    forth.data_stack = vec![1, 2];
+    assert_eq!(forth.eval_string(word), Err(StackUnderflow),);
 }
 
 #[test_case("1 0 /", DivisionByZero; "div division by zero")]
