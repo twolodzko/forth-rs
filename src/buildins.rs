@@ -26,6 +26,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("<>", Callable(ne)),
     ("<", Callable(lt)),
     (">", Callable(gt)),
+    ("not", Callable(not)),
     ("and", Callable(and)),
     ("or", Callable(or)),
     ("xor", Callable(xor)),
@@ -228,6 +229,13 @@ fn lt(forth: &mut Forth) -> Result<(), Error> {
 fn gt(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
     forth.push(if a > b { -1 } else { 0 });
+    Ok(())
+}
+
+/// `not (n -- n)`
+fn not(forth: &mut Forth) -> Result<(), Error> {
+    let a = forth.pop()?;
+    forth.push(if a != 0 { 0 } else { -1 });
     Ok(())
 }
 
