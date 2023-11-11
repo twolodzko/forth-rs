@@ -37,6 +37,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("swap", Callable(swap)),
     ("rot", Callable(rot)),
     ("over", Callable(over)),
+    ("depth", Callable(depth)),
     // variables
     ("!", Callable(set)),
     ("@", Callable(fetch)),
@@ -382,5 +383,11 @@ fn until(forth: &mut Forth) -> Result<(), Error> {
     if flag != 0 {
         return Err(LeaveLoop);
     }
+    Ok(())
+}
+
+/// `depth (-- n)`
+fn depth(forth: &mut Forth) -> Result<(), Error> {
+    forth.push(forth.stack.len() as i32);
     Ok(())
 }

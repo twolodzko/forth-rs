@@ -49,6 +49,8 @@ use test_case::test_case;
 #[test_case("drop", &[1, 2, 3, 4], &[1, 2, 3]; "drop")]
 #[test_case("rot", &[1, 2, 3, 4], &[1, 3, 4, 2]; "rot")]
 #[test_case("over", &[1, 2], &[1, 2, 1]; "over")]
+#[test_case("depth", &[], &[0]; "depth of empty stack")]
+#[test_case("depth", &[5, 10, 18, 2], &[5, 10, 18, 2, 4]; "depth of non-empty stack")]
 #[test_case("if 10 then", &[-1], &[10]; "if-then true branch")]
 #[test_case("if 10 then", &[0], &[]; "if-then false branch")]
 #[test_case("if 10 else 20 then", &[-1], &[10]; "if-else-then true branch")]
