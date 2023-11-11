@@ -12,7 +12,7 @@ impl<T, const N: usize> Tail<T, N> {
     }
 
     #[inline]
-    pub fn insert(&mut self, value: T) {
+    pub fn push(&mut self, value: T) {
         self.position = (self.position + 1) % N;
         self.data[self.position] = value;
         self.length = (self.length + 1).min(N);
@@ -71,7 +71,6 @@ where
     fn default() -> Self {
         Self {
             data: [T::default(); N],
-            // initialize at Nth position, so the first value will be inserted at (N + 1) % N = 0
             position: N - 1,
             length: 0,
         }
@@ -105,16 +104,16 @@ mod tests {
     fn insert_some_values() {
         let mut tail: Tail<char, 5> = Tail::default();
 
-        tail.insert('a');
+        tail.push('a');
         assert_eq!(tail.get(0), Some(&'a'));
         assert!(tail.get(1).is_none());
 
-        tail.insert('b');
+        tail.push('b');
         assert_eq!(tail.get(0), Some(&'b'));
         assert_eq!(tail.get(1), Some(&'a'));
         assert!(tail.get(2).is_none());
 
-        tail.insert('c');
+        tail.push('c');
         assert_eq!(tail.get(0), Some(&'c'));
         assert_eq!(tail.get(1), Some(&'b'));
         assert_eq!(tail.get(2), Some(&'a'));
@@ -138,7 +137,7 @@ mod tests {
         let mut tail: Tail<usize, 5> = Tail::default();
 
         for i in 0..5 {
-            tail.insert(i);
+            tail.push(i);
         }
         // [0 1 2 3 4]
         //          ^
@@ -148,7 +147,7 @@ mod tests {
         assert!(tail.get(5).is_none());
 
         for i in 5..8 {
-            tail.insert(i);
+            tail.push(i);
         }
         // [5 6 7 3 4]
         //      ^
@@ -178,7 +177,7 @@ mod tests {
         assert!(tail.get(5).is_none());
 
         for i in 8..12 {
-            tail.insert(i);
+            tail.push(i);
         }
         // [5 8 9 10 11]
         //           ^
