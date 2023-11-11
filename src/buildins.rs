@@ -300,7 +300,7 @@ fn cr(_: &mut Forth) -> Result<(), Error> {
 
 /// `. (n --)`
 fn dot(forth: &mut Forth) -> Result<(), Error> {
-    print!("{}", forth.pop()?);
+    print!("{} ", forth.pop()?);
     Ok(())
 }
 
