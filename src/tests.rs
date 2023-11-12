@@ -74,7 +74,7 @@ use test_case::test_case;
 #[test_case("begin -1 if leave then again", &[], &[]; "conditionally leave begin again loop")]
 #[test_case("begin 1 + dup 10 > if leave then again", &[0], &[11]; "begin again")]
 #[test_case("do i loop", &[5, 0], &[0, 1, 2, 3, 4]; "do loop")]
-// #[test_case("3 0 do 2 0 do i j loop loop", &[], &[0, 0, 1, 0, 0, 1, 1, 1, 0, 2, 1, 2]; "nested do loop")]
+#[test_case("3 0 do 2 0 do j i loop loop", &[], &[0, 0, 0, 1, 1, 0, 1, 1, 2, 0, 2, 1]; "nested do loop")]
 fn eval_string(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
     let mut forth = Forth::new(10);
     forth.data_stack = init_stack.to_vec();

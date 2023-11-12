@@ -29,6 +29,8 @@ pub enum Expr {
     Constant(Int),
     /// Create a new constant holding the memory address of the variable.
     NewVariable(String),
+    /// Read Forth script from the path. // TODO
+    Include(String),
     /// Placeholder for a reserved word.
     Dummy,
 }
@@ -74,6 +76,7 @@ impl Expr {
                 forth.push(forth.memory.len() as i32 - 1);
                 Ok(())
             }
+            Include(_) => todo!(), // TODO
             Dummy => Err(CompileTimeWord),
         }
     }

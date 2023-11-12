@@ -484,7 +484,7 @@ fn loop_j(forth: &mut Forth) -> Result<(), Error> {
     if forth.return_stack.len() < 2 {
         return Err(StackUnderflow);
     }
-    let index = forth.return_stack.len() - 1;
+    let index = forth.return_stack.len() - 2;
     let value = forth.return_stack.get(index).unwrap();
     forth.push(*value);
     Ok(())
