@@ -89,19 +89,16 @@ impl<'a> Parser<'a> {
         // if <then...> then
         // if <then...> else <otherwise...> then
 
-        let mut acc = Vec::new();
         let mut then = Vec::new();
         let mut other = Vec::new();
-        let mut had_else = false;
+        let mut acc = &mut then;
 
         for ref expr in self.by_ref() {
             if let Word(word) = expr {
                 match word.as_str() {
                     // the else block starts
                     "else" => {
-                        then = acc.clone();
-                        acc.clear();
-                        had_else = true;
+                        acc = &mut other;
                         continue;
                     }
                     // the definition ends
@@ -110,12 +107,6 @@ impl<'a> Parser<'a> {
                 }
             }
             acc.push(expr.clone())
-        }
-
-        if had_else {
-            other = acc.clone();
-        } else {
-            then = acc.clone();
         }
 
         Some(IfElseThen(then, other))
