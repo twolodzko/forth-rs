@@ -112,9 +112,9 @@ impl Expr {
             }
             See(word) => {
                 match forth.dictionary.get(word) {
-                    Some(Dummy) => println!("<compiled-word: {}>", word),
-                    Some(func @ Function(_)) => println!(": {} {} ;", word, func),
-                    Some(other) => println!("{}", other),
+                    Some(Dummy) => print!("<special word: {}>", word),
+                    Some(func @ Function(_)) => print!(": {} {} ;", word, func),
+                    Some(other) => print!("{}", other),
                     None => return Err(UnknownWord(word.to_string())),
                 }
                 Ok(())
