@@ -77,7 +77,7 @@ impl Expr {
                 forth.define_word(name, Constant(addr))?;
                 Ok(())
             }
-            Include(_) => todo!(), // TODO
+            Include(path) => forth.eval_file(path),
             Dummy => Err(CompileTimeWord),
         }
     }
