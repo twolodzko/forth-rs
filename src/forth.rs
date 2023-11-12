@@ -1,9 +1,6 @@
 use crate::{
     errors::Error::{self, CustomError, Redefined, StackUnderflow},
-    expressions::{
-        Expr::{self, Constant},
-        Int,
-    },
+    expressions::{Expr, Int},
     parser::Parser,
 };
 use std::{
@@ -19,7 +16,7 @@ pub struct Forth {
     /// The additional temporary memory.
     pub(crate) return_stack: Vec<Int>,
     /// Dictionary mapping words to functions, constants, etc.
-    dictionary: HashMap<String, Expr>,
+    pub(crate) dictionary: HashMap<String, Expr>,
     /// Memory for storing data related to named variables.
     pub(crate) memory: Vec<Int>,
 }
@@ -110,12 +107,5 @@ impl Forth {
             .collect::<Vec<String>>();
         words.sort();
         words
-    }
-
-    /// Create a new variable.
-    pub(crate) fn insert_variable(&mut self, name: &str, value: Int) -> Result<(), Error> {
-        self.memory.push(value);
-        let addr = self.memory.len() - 1;
-        self.define_word(name, Constant(addr as i32))
     }
 }

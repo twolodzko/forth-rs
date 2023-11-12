@@ -29,7 +29,7 @@ pub enum Expr {
     Constant(Int),
     /// Create a new constant holding the memory address of the variable.
     NewVariable(String),
-    /// Read Forth script from the path. // TODO
+    /// Read Forth script from the path.
     Include(String),
     /// Placeholder for a reserved word.
     Dummy,
@@ -63,17 +63,18 @@ impl Expr {
             IfElseThen(body) => body.execute(forth),
             Begin(body) => body.execute(forth),
             Loop(body) => body.execute(forth),
-            Constant(val) => {
-                forth.push(*val);
-                Ok(())
-            }
             NewConstant(name) => {
                 let value = forth.pop()?;
                 forth.define_word(name, Constant(value))
             }
+            Constant(val) => {
+                forth.push(*val);
+                Ok(())
+            }
             NewVariable(name) => {
-                forth.insert_variable(name, 0)?;
-                forth.push(forth.memory.len() as i32 - 1);
+                forth.memory.push(0);
+                let addr = (forth.memory.len() - 1) as i32;
+                forth.define_word(name, Constant(addr))?;
                 Ok(())
             }
             Include(_) => todo!(), // TODO

@@ -49,7 +49,6 @@ use test_case::test_case;
 #[test_case("xor", &[0, -1], &[-1]; "xor for false true")]
 #[test_case("xor", &[-1, 0], &[-1]; "xor for true false")]
 #[test_case("xor", &[-1, -1], &[0]; "xor for true true")]
-#[test_case("variable X", &[], &[0]; "new variable")]
 #[test_case("3 pick", &[1, 2, 3, 4], &[1, 2, 3, 4, 2]; "pick")]
 #[test_case("3 roll", &[1, 2, 3, 4], &[1, 3, 4, 2]; "roll")]
 #[test_case("clearstack", &[1, 2, 3, 4], &[]; "clearstack")]
@@ -194,14 +193,14 @@ fn variables() {
     let mut forth = Forth::new(10);
 
     assert!(forth.eval_string("variable x").is_ok());
-    assert_eq!(forth.data_stack, vec![0]);
+    assert_eq!(forth.data_stack, vec![]);
     assert!(forth.eval_string("5 x !").is_ok());
     assert!(forth.eval_string("x @").is_ok());
-    assert_eq!(forth.data_stack, vec![0, 5]);
+    assert_eq!(forth.data_stack, vec![5]);
 
     assert!(forth.eval_string("7 x !").is_ok());
     assert!(forth.eval_string("x @").is_ok());
-    assert_eq!(forth.data_stack, vec![0, 5, 7]);
+    assert_eq!(forth.data_stack, vec![5, 7]);
 
     assert!(forth.eval_string("17 y !").is_err());
 }
