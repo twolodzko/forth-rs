@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use crate::{
+    compiled,
     errors::Error::{self, CompileTimeWord, UnknownWord},
     forth::Forth,
 };
@@ -16,15 +17,15 @@ pub enum Expr {
     /// A builtin function.
     Callable(fn(forth: &mut Forth) -> Result<(), Error>),
     /// Initialize a function and name it.
-    NewFunction(String, imp::Function),
+    NewFunction(String, compiled::Function),
     /// A function that can be executed.
-    Function(imp::Function),
+    Function(compiled::Function),
     /// If-then-else block.
-    IfElseThen(imp::IfElseThen),
+    IfElseThen(compiled::IfElseThen),
     /// Begin loop
-    Begin(imp::Begin),
+    Begin(compiled::Begin),
     /// Do-loop.
-    Loop(imp::Loop),
+    Loop(compiled::Loop),
     /// Create a new constant.
     NewConstant(String),
     /// Push the constant to the stack.
@@ -113,7 +114,7 @@ impl Display for Expr {
             Print(string) => format!(".\" {}\"", string),
             Callable(obj) => format!("<func: {:?}>", &obj),
             NewFunction(name, obj) => format!(": {} {} ;", name, vec_to_string(&obj.body)),
-            Function(obj) => format!("{}", vec_to_string(&obj.body)),
+            Function(obj) => vec_to_string(&obj.body),
             IfElseThen(body) => {
                 if body.other.is_empty() {
                     format!("if {} then", vec_to_string(&body.then))
@@ -135,92 +136,5 @@ impl Display for Expr {
             Dummy => unreachable!(),
         };
         write!(f, "{}", string)
-    }
-}
-
-pub mod imp {
-    use super::Expr;
-    use crate::{
-        errors::Error::{self, LeaveLoop},
-        forth::Forth,
-    };
-
-    #[inline]
-    fn execute_many(forth: &mut Forth, body: &[Expr]) -> Result<(), Error> {
-        for obj in body {
-            obj.execute(forth)?;
-        }
-        Ok(())
-    }
-
-    #[derive(Clone, PartialEq, Debug)]
-    pub struct Function {
-        pub body: Vec<Expr>,
-    }
-
-    impl Function {
-        #[inline]
-        pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
-            execute_many(forth, &self.body)
-        }
-    }
-
-    #[derive(Clone, PartialEq, Debug)]
-    pub struct IfElseThen {
-        pub then: Vec<Expr>,
-        pub other: Vec<Expr>,
-    }
-
-    impl IfElseThen {
-        #[inline]
-        pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
-            if forth.pop()? != 0 {
-                execute_many(forth, &self.then)
-            } else {
-                execute_many(forth, &self.other)
-            }
-        }
-    }
-
-    macro_rules! maybe_break_loop {
-        ( $expr:expr ) => {
-            match $expr {
-                Err(LeaveLoop) => break,
-                result => result?,
-            }
-        };
-    }
-
-    #[derive(Clone, PartialEq, Debug)]
-    pub struct Begin {
-        pub body: Vec<Expr>,
-    }
-
-    impl Begin {
-        #[inline]
-        pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
-            loop {
-                maybe_break_loop!(execute_many(forth, &self.body))
-            }
-            Ok(())
-        }
-    }
-
-    #[derive(Clone, PartialEq, Debug)]
-    pub struct Loop {
-        pub body: Vec<Expr>,
-    }
-
-    impl Loop {
-        #[inline]
-        pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
-            let (limit, index) = forth.pop2()?;
-            for i in index..limit {
-                forth.return_stack.push(i);
-                maybe_break_loop!(execute_many(forth, &self.body));
-                forth.return_stack.pop();
-            }
-            Ok(())
-        }
     }
 }

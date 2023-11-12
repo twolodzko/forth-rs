@@ -1,4 +1,5 @@
 mod buildins;
+mod compiled;
 mod errors;
 mod expressions;
 mod forth;

@@ -1,6 +1,6 @@
-use crate::expressions::{
-    imp::{self},
-    Expr::{
+use crate::{
+    compiled,
+    expressions::Expr::{
         self, Begin, IfElseThen, Include, Loop, NewConstant, NewFunction, NewVariable, Print, See,
         Word,
     },
@@ -86,7 +86,7 @@ impl<'a> Parser<'a> {
             })
             .collect();
 
-        let func = imp::Function { body };
+        let func = compiled::Function { body };
         Some(NewFunction(name, func))
     }
 
@@ -123,7 +123,7 @@ impl<'a> Parser<'a> {
             then = acc.clone();
         }
 
-        Some(IfElseThen(imp::IfElseThen { then, other }))
+        Some(IfElseThen(compiled::IfElseThen { then, other }))
     }
 
     fn read_begin(&mut self) -> Option<Expr> {
@@ -148,7 +148,7 @@ impl<'a> Parser<'a> {
             }
             body.push(expr.clone())
         }
-        Some(Begin(imp::Begin { body }))
+        Some(Begin(compiled::Begin { body }))
     }
 
     fn read_loop(&mut self) -> Option<Expr> {
@@ -163,7 +163,7 @@ impl<'a> Parser<'a> {
                 }
             })
             .collect();
-        Some(Loop(imp::Loop { body }))
+        Some(Loop(compiled::Loop { body }))
     }
 }
 
