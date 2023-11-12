@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     errors::Error::{self, CompileTimeWord, UnknownWord},
     forth::Forth,
@@ -31,6 +33,8 @@ pub enum Expr {
     NewVariable(String),
     /// Read Forth script from the path.
     Include(String),
+    /// Display the content of the word.
+    See(String),
     /// Placeholder for a reserved word.
     Dummy,
 }
@@ -78,8 +82,59 @@ impl Expr {
                 Ok(())
             }
             Include(path) => forth.eval_file(path),
+            See(word) => {
+                match forth.dictionary.get(word) {
+                    Some(Dummy) => println!("<compiled-word: {}>", word),
+                    Some(func @ Function(_)) => println!(": {} {} ;", word, func),
+                    Some(other) => println!("{}", other),
+                    None => return Err(UnknownWord(word.to_string())),
+                }
+                Ok(())
+            }
             Dummy => Err(CompileTimeWord),
         }
+    }
+}
+
+impl Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        #[inline]
+        fn vec_to_string(exprs: &[Expr]) -> String {
+            exprs
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>()
+                .join(" ")
+        }
+
+        use Expr::*;
+        let string = match self {
+            Word(string) => string.to_string(),
+            Print(string) => format!(".\" {}\"", string),
+            Callable(obj) => format!("<func: {:?}>", &obj),
+            NewFunction(name, obj) => format!(": {} {} ;", name, vec_to_string(&obj.body)),
+            Function(obj) => format!("{}", vec_to_string(&obj.body)),
+            IfElseThen(body) => {
+                if body.other.is_empty() {
+                    format!("if {} then", vec_to_string(&body.then))
+                } else {
+                    format!(
+                        "if {} else {} then",
+                        vec_to_string(&body.then),
+                        vec_to_string(&body.other)
+                    )
+                }
+            }
+            Begin(obj) => format!("begin {}", vec_to_string(&obj.body)),
+            Loop(obj) => format!("do {} loop", vec_to_string(&obj.body)),
+            NewConstant(name) => format!("constant {}", name),
+            Constant(val) => format!("{}", val),
+            NewVariable(name) => format!("variable {}", name),
+            Include(path) => format!("include {}", path),
+            See(word) => format!("see {}", word),
+            Dummy => unreachable!(),
+        };
+        write!(f, "{}", string)
     }
 }
 

@@ -56,6 +56,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("emit", Callable(emit)),
     // helpers
     ("words", Callable(words)),
+    ("see", Dummy),
     // compile-only words and the words handled specially by parser
     ("if", Dummy),
     ("then", Dummy),
@@ -64,6 +65,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     (":", Dummy),
     (".(", Dummy),
     (".\"", Dummy),
+    ("include", Dummy),
     // looping
     ("leave", Callable(leave)),
     ("while", Callable(while_cond)),
