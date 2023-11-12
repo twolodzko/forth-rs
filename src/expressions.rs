@@ -1,10 +1,18 @@
 use std::fmt::Display;
 
 use crate::{
-    compiled,
-    errors::Error::{self, CompileTimeWord, UnknownWord},
+    errors::Error::{self, CompileTimeWord, LeaveLoop, UnknownWord},
     forth::Forth,
 };
+
+macro_rules! maybe_break_loop {
+    ( $expr:expr ) => {
+        match $expr {
+            Err(LeaveLoop) => break,
+            result => result?,
+        }
+    };
+}
 
 pub type Int = i32;
 
@@ -17,15 +25,15 @@ pub enum Expr {
     /// A builtin function.
     Callable(fn(forth: &mut Forth) -> Result<(), Error>),
     /// Initialize a function and name it.
-    NewFunction(String, compiled::Function),
+    NewFunction(String, Vec<Expr>),
     /// A function that can be executed.
-    Function(compiled::Function),
+    Function(Vec<Expr>),
     /// If-then-else block.
-    IfElseThen(compiled::IfElseThen),
+    IfElseThen(Vec<Expr>, Vec<Expr>),
     /// Begin loop
-    Begin(compiled::Begin),
+    Begin(Vec<Expr>),
     /// Do-loop.
-    Loop(compiled::Loop),
+    Loop(Vec<Expr>),
     /// Create a new constant.
     NewConstant(String),
     /// Push the constant to the stack.
@@ -55,19 +63,34 @@ impl Expr {
                     }
                 }
             },
-            Print(string) => {
-                print!("{}", string);
-                Ok(())
-            }
             Callable(exec) => exec(forth),
             NewFunction(name, func) => {
                 let func = Function(func.clone());
                 forth.define_word(name, func)
             }
-            Function(func) => func.execute(forth),
-            IfElseThen(body) => body.execute(forth),
-            Begin(body) => body.execute(forth),
-            Loop(body) => body.execute(forth),
+            Function(body) => execute_many(forth, body),
+            IfElseThen(then, other) => {
+                if forth.pop()? != 0 {
+                    execute_many(forth, then)
+                } else {
+                    execute_many(forth, other)
+                }
+            }
+            Begin(body) => {
+                loop {
+                    maybe_break_loop!(execute_many(forth, body))
+                }
+                Ok(())
+            }
+            Loop(body) => {
+                let (limit, index) = forth.pop2()?;
+                for i in index..limit {
+                    forth.return_stack.push(i);
+                    maybe_break_loop!(execute_many(forth, body));
+                    forth.return_stack.pop();
+                }
+                Ok(())
+            }
             NewConstant(name) => {
                 let value = forth.pop()?;
                 forth.define_word(name, Constant(value))
@@ -83,6 +106,10 @@ impl Expr {
                 Ok(())
             }
             Include(path) => forth.eval_file(path),
+            Print(string) => {
+                print!("{}", string);
+                Ok(())
+            }
             See(word) => {
                 match forth.dictionary.get(word) {
                     Some(Dummy) => println!("<compiled-word: {}>", word),
@@ -95,6 +122,14 @@ impl Expr {
             Dummy => Err(CompileTimeWord),
         }
     }
+}
+
+#[inline]
+fn execute_many(forth: &mut Forth, body: &[Expr]) -> Result<(), Error> {
+    for obj in body {
+        obj.execute(forth)?;
+    }
+    Ok(())
 }
 
 impl Display for Expr {
@@ -113,21 +148,21 @@ impl Display for Expr {
             Word(string) => string.to_string(),
             Print(string) => format!(".\" {}\"", string),
             Callable(obj) => format!("<func: {:?}>", &obj),
-            NewFunction(name, obj) => format!(": {} {} ;", name, vec_to_string(&obj.body)),
-            Function(obj) => vec_to_string(&obj.body),
-            IfElseThen(body) => {
-                if body.other.is_empty() {
-                    format!("if {} then", vec_to_string(&body.then))
+            NewFunction(name, body) => format!(": {} {} ;", name, vec_to_string(body)),
+            Function(body) => vec_to_string(body),
+            IfElseThen(then, other) => {
+                if other.is_empty() {
+                    format!("if {} then", vec_to_string(then))
                 } else {
                     format!(
                         "if {} else {} then",
-                        vec_to_string(&body.then),
-                        vec_to_string(&body.other)
+                        vec_to_string(then),
+                        vec_to_string(other)
                     )
                 }
             }
-            Begin(obj) => format!("begin {}", vec_to_string(&obj.body)),
-            Loop(obj) => format!("do {} loop", vec_to_string(&obj.body)),
+            Begin(body) => format!("begin {}", vec_to_string(body)),
+            Loop(body) => format!("do {} loop", vec_to_string(body)),
             NewConstant(name) => format!("constant {}", name),
             Constant(val) => format!("{}", val),
             NewVariable(name) => format!("variable {}", name),
