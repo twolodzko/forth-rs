@@ -168,7 +168,7 @@ impl Display for Expr {
             NewVariable(name) => format!("variable {}", name),
             Include(path) => format!("include {}", path),
             See(word) => format!("see {}", word),
-            Dummy => unreachable!(),
+            Dummy => "<special word>".to_string(),
         };
         write!(f, "{}", string)
     }
