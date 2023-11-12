@@ -1,6 +1,8 @@
 use crate::expressions::{
     imp::{self},
-    Expr::{self, Begin, IfElseThen, Loop, NewConstant, NewFunction, NewVariable, Print, Word},
+    Expr::{
+        self, Begin, IfElseThen, Include, Loop, NewConstant, NewFunction, NewVariable, Print, Word,
+    },
 };
 use std::{iter::Peekable, str::Chars};
 
@@ -205,6 +207,10 @@ impl<'a> Iterator for Parser<'a> {
                 Some(NewConstant(name))
             }
             "if" => self.read_iet(),
+            "include" => {
+                let path = self.read_word();
+                Some(Include(path))
+            }
             // loops
             "begin" => self.read_begin(),
             "do" => self.read_loop(),

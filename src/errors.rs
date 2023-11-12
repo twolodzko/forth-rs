@@ -10,6 +10,7 @@ pub enum Error {
     LeaveLoop,
     DivisionByZero,
     CompileTimeWord,
+    CustomError(String),
 }
 
 impl Display for Error {
@@ -24,6 +25,7 @@ impl Display for Error {
             LeaveLoop => "leaving the loop".to_string(),
             DivisionByZero => "division by zero".to_string(),
             CompileTimeWord => "interpreting a compile-only word".to_string(),
+            CustomError(msg) => msg.to_string(),
         };
         write!(f, "{}", msg)
     }

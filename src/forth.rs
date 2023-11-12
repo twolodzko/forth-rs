@@ -1,12 +1,16 @@
 use crate::{
-    errors::Error::{self, Redefined, StackUnderflow},
+    errors::Error::{self, CustomError, Redefined, StackUnderflow},
     expressions::{
         Expr::{self, Constant},
         Int,
     },
     parser::Parser,
 };
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{BufRead, BufReader},
+};
 
 /// The Forth interpreter that walks over the code and executes it.
 pub struct Forth {
@@ -31,7 +35,7 @@ impl Forth {
         }
     }
 
-    /// Evaluate a string
+    /// Evaluate a string.
     pub fn eval_string(&mut self, string: &str) -> Result<(), Error> {
         let mut parser = Parser::from(string);
         while let Some(result) = self.eval_next(&mut parser) {
@@ -43,7 +47,18 @@ impl Forth {
         Ok(())
     }
 
-    /// Go to next word and evaluate it
+    /// Evaluate a file.
+    pub fn eval_file(&mut self, path: &str) -> Result<(), Error> {
+        let file = File::open(path).map_err(|msg| CustomError(msg.to_string()))?;
+        let reader = BufReader::new(file);
+        for line in reader.lines() {
+            let line = line.map_err(|msg| CustomError(msg.to_string()))?;
+            self.eval_string(&line)?;
+        }
+        Ok(())
+    }
+
+    /// Go to next word and evaluate it.
     #[inline]
     pub(crate) fn eval_next(&mut self, parser: &mut Parser) -> Option<Result<(), Error>> {
         let expr = parser.next()?;

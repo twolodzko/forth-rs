@@ -1,5 +1,6 @@
 use forth_rs::Forth;
 use rustyline::{error::ReadlineError, DefaultEditor};
+use std::env;
 
 fn repl(forth: &mut Forth) {
     println!("Press ^C to exit.\n");
@@ -26,7 +27,24 @@ fn repl(forth: &mut Forth) {
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
     let mut forth = Forth::new(1024);
 
-    repl(&mut forth);
+    if args.len() < 2 {
+        repl(&mut forth);
+        return;
+    }
+
+    if &args[1] == "-h" || &args[1] == "--help" {
+        println!(
+            "Usage: {} [FILE]...\n\nIf no files are given, opens REPL.",
+            args[0]
+        );
+        return;
+    }
+
+    if let Err(msg) = forth.eval_file(&args[1]) {
+        panic!("{}", msg);
+    }
 }
