@@ -1,10 +1,8 @@
 use crate::{
     errors::Error::{self, DivisionByZero, StackUnderflow},
-    expressions::{
-        Expr::{self, Begin, IfElseThen, Loop, NewFunction, Word},
-        Int,
-    },
+    expressions::Expr::{self, Begin, IfElseThen, Loop, NewFunction, Word},
     forth::Forth,
+    numbers::Int,
     parser::Parser,
 };
 use test_case::test_case;
@@ -80,9 +78,12 @@ use test_case::test_case;
 #[test_case("begin 1 + dup 10 > if leave then again", &[0], &[11]; "begin again")]
 #[test_case("do i loop", &[5, 0], &[0, 1, 2, 3, 4]; "do loop")]
 #[test_case("3 0 do 2 0 do j i loop loop", &[], &[0, 0, 0, 1, 1, 0, 1, 1, 2, 0, 2, 1]; "nested do loop")]
-fn eval_string(word: &str, init_stack: &[Int], expected_stack: &[Int]) {
+fn eval_string(word: &str, init_stack: &[i32], expected_stack: &[i32]) {
+    let expected_stack = expected_stack.iter().map(|x| Int(*x)).collect::<Vec<_>>();
+    let init_stack = init_stack.iter().map(|x| Int(*x)).collect::<Vec<_>>();
+
     let mut forth = Forth::new(10);
-    forth.data_stack = init_stack.to_vec();
+    forth.data_stack = init_stack;
     assert!(forth.eval_string(word).is_ok());
     assert_eq!(expected_stack, forth.data_stack);
 }
@@ -144,7 +145,7 @@ fn underflow_for_empty_stack(word: &str) {
 #[test_case("!"; "set variable")]
 fn underflow_for_one_value_on_stack(word: &str) {
     let mut forth = Forth::new(10);
-    forth.data_stack = vec![1];
+    forth.data_stack = vec![Int(1)];
     assert_eq!(forth.eval_string(word), Err(StackUnderflow),);
 }
 
@@ -154,7 +155,7 @@ fn underflow_for_one_value_on_stack(word: &str) {
 #[test_case("2 roll"; "roll")]
 fn underflow_for_two_value_on_stack(word: &str) {
     let mut forth = Forth::new(10);
-    forth.data_stack = vec![1, 2];
+    forth.data_stack = vec![Int(1), Int(2)];
     assert_eq!(forth.eval_string(word), Err(StackUnderflow),);
 }
 
@@ -183,11 +184,11 @@ fn constants() {
 
     assert!(forth.get_word("x").is_none());
     assert!(forth.eval_string("42 constant x").is_ok());
-    assert_eq!(Some(Constant(42)), forth.get_word("x"));
+    assert_eq!(Some(Constant(Int(42))), forth.get_word("x"));
 
     assert!(forth.get_word("y").is_none());
     assert!(forth.eval_string("123 constant y").is_ok());
-    assert_eq!(Some(Constant(123)), forth.get_word("y"));
+    assert_eq!(Some(Constant(Int(123))), forth.get_word("y"));
 
     assert_eq!(
         Err(Error::Redefined("x".into())),
@@ -204,11 +205,11 @@ fn variables() {
     assert_eq!(forth.data_stack, vec![]);
     assert!(forth.eval_string("5 x !").is_ok());
     assert!(forth.eval_string("x @").is_ok());
-    assert_eq!(forth.data_stack, vec![5]);
+    assert_eq!(forth.data_stack, vec![Int(5)]);
 
     assert!(forth.eval_string("7 x !").is_ok());
     assert!(forth.eval_string("x @").is_ok());
-    assert_eq!(forth.data_stack, vec![5, 7]);
+    assert_eq!(forth.data_stack, vec![Int(5), Int(7)]);
 
     assert!(forth.eval_string("17 y !").is_err());
 }
@@ -219,14 +220,14 @@ fn return_stack() {
 
     assert!(forth.eval_string("42 >r").is_ok());
     assert_eq!(forth.data_stack, &[]);
-    assert_eq!(forth.return_stack, &[42]);
+    assert_eq!(forth.return_stack, &[Int(42)]);
 
     assert!(forth.eval_string("r@").is_ok());
-    assert_eq!(forth.data_stack, &[42]);
-    assert_eq!(forth.return_stack, &[42]);
+    assert_eq!(forth.data_stack, &[Int(42)]);
+    assert_eq!(forth.return_stack, &[Int(42)]);
 
     assert!(forth.eval_string("r>").is_ok());
-    assert_eq!(forth.data_stack, &[42, 42]);
+    assert_eq!(forth.data_stack, &[Int(42), Int(42)]);
     assert_eq!(forth.return_stack, &[]);
 }
 

@@ -3,6 +3,7 @@ use std::fmt::Display;
 use crate::{
     errors::Error::{self, CompileTimeWord, LeaveLoop, UnknownWord},
     forth::Forth,
+    numbers::Int,
 };
 
 macro_rules! maybe_break_loop {
@@ -13,9 +14,6 @@ macro_rules! maybe_break_loop {
         }
     };
 }
-
-/// The numeric data type.
-pub type Int = i32;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Expr {
@@ -57,7 +55,7 @@ impl Expr {
             Word(word) => match forth.get_word(word) {
                 Some(compiled) => compiled.execute(forth),
                 None => {
-                    if let Ok(num) = word.parse::<Int>() {
+                    if let Some(num) = Int::parse(word) {
                         forth.push(num);
                         Ok(())
                     } else {
@@ -72,7 +70,7 @@ impl Expr {
             }
             Function(body) => execute_many(forth, body),
             IfElseThen(then, other) => {
-                if forth.pop()? != 0 {
+                if forth.pop()?.is_true() {
                     execute_many(forth, then)
                 } else {
                     execute_many(forth, other)
@@ -86,8 +84,8 @@ impl Expr {
             }
             Loop(body) => {
                 let (limit, index) = forth.pop2()?;
-                for i in index..limit {
-                    forth.return_stack.push(i);
+                for i in index.0..limit.0 {
+                    forth.return_stack.push(Int(i));
                     maybe_break_loop!(execute_many(forth, body));
                     forth.return_stack.pop();
                 }
@@ -102,9 +100,9 @@ impl Expr {
                 Ok(())
             }
             NewVariable(name) => {
-                forth.memory.push(0);
-                let addr = (forth.memory.len() - 1) as i32;
-                forth.define_word(name, Constant(addr))?;
+                forth.memory.push(Int(0));
+                let addr = forth.memory.len() - 1;
+                forth.define_word(name, Constant(addr.into()))?;
                 Ok(())
             }
             Include(path) => forth.eval_file(path),

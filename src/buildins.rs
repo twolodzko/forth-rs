@@ -2,12 +2,13 @@ use crate::{
     errors::Error::{self, DivisionByZero, InvalidAddress, LeaveLoop, StackUnderflow},
     expressions::Expr::{self, Callable, Constant, Dummy},
     forth::Forth,
+    numbers::Int,
 };
 
 const BUILDINS: &[(&str, Expr)] = &[
     // logic
-    ("true", Constant(-1)),
-    ("false", Constant(0)),
+    ("true", Constant(Int(-1))),
+    ("false", Constant(Int(0))),
     ("not", Callable(not)),
     ("and", Callable(and)),
     ("or", Callable(or)),
@@ -97,28 +98,28 @@ impl Forth {
 /// `+ (n1 n2 -- sum)`
 fn add(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(a.saturating_add(b));
+    forth.push(a + b);
     Ok(())
 }
 
 /// `- (n1 n2 -- diff)`
 fn sub(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(a.saturating_sub(b));
+    forth.push(a - b);
     Ok(())
 }
 
 /// `* (n1 n2 -- prod)`
 fn mul(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(a.saturating_mul(b));
+    forth.push(a * b);
     Ok(())
 }
 
 /// `/ (n1 n2 -- quot)`
 fn div(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    if b == 0 {
+    if b.is_zero() {
         return Err(DivisionByZero);
     }
     forth.push(a / b);
@@ -128,7 +129,7 @@ fn div(forth: &mut Forth) -> Result<(), Error> {
 /// `mod (n1 n2 -- rem)`
 fn rem(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    if b == 0 {
+    if b.is_zero() {
         return Err(DivisionByZero);
     }
     forth.push(a % b);
@@ -138,7 +139,7 @@ fn rem(forth: &mut Forth) -> Result<(), Error> {
 /// `/mod (n1 n2 -- rem quot)`
 fn div_rem(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    if b == 0 {
+    if b.is_zero() {
         return Err(DivisionByZero);
     }
     forth.push(a % b);
@@ -146,28 +147,16 @@ fn div_rem(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
-/// Transform i64 to i32 rounding the i64 values to the limits of i32.
-#[inline]
-fn saturating_i64_to_i32(value: i64) -> i32 {
-    if value < i32::MIN as i64 {
-        i32::MIN
-    } else if value > i32::MAX as i64 {
-        i32::MAX
-    } else {
-        value as i32
-    }
-}
-
 /// `*/ (n1 n2 n3 -- n4)`
 /// `n1 * n2 / n3`, but make the calculation using double precision numbers.
 fn mul_div(forth: &mut Forth) -> Result<(), Error> {
     let c = forth.pop()?;
-    if c == 0 {
+    if c.is_zero() {
         return Err(DivisionByZero);
     }
     let (a, b) = forth.pop2()?;
-    let (a, b, c) = (a as i64, b as i64, c as i64);
-    forth.push(saturating_i64_to_i32(a * b / c));
+    let (a, b, c) = (i64::from(a), i64::from(b), i64::from(c));
+    forth.push(Int::from(a * b / c));
     Ok(())
 }
 
@@ -175,111 +164,132 @@ fn mul_div(forth: &mut Forth) -> Result<(), Error> {
 /// `n1 * n2 / n3` and `n1 * n2 % n3`, but make the calculation using double precision numbers.
 fn mul_div_rem(forth: &mut Forth) -> Result<(), Error> {
     let c = forth.pop()?;
-    if c == 0 {
+    if c.is_zero() {
         return Err(DivisionByZero);
     }
     let (a, b) = forth.pop2()?;
-    let (a, b, c) = (a as i64, b as i64, c as i64);
-    forth.push(saturating_i64_to_i32(a * b % c));
-    forth.push(saturating_i64_to_i32(a * b / c));
+    let (a, b, c) = (i64::from(a), i64::from(b), i64::from(c));
+    forth.push(Int::from(a * b % c));
+    forth.push(Int::from(a * b / c));
     Ok(())
 }
 
 /// `abs (n -- u)`
 fn abs(forth: &mut Forth) -> Result<(), Error> {
-    let num = forth.pop()?;
-    forth.push(num.abs());
+    if forth.data_stack.is_empty() {
+        return Err(StackUnderflow);
+    }
+    let n = forth.data_stack.len();
+    forth.data_stack[n - 1] = forth.data_stack[n - 1].abs();
     Ok(())
 }
 
 /// `negate (-n|+n -- +n|-n)`
 fn negate(forth: &mut Forth) -> Result<(), Error> {
-    let num = forth.pop()?;
-    forth.push(-num);
+    if forth.data_stack.is_empty() {
+        return Err(StackUnderflow);
+    }
+    let n = forth.data_stack.len();
+    forth.data_stack[n - 1] = -forth.data_stack[n - 1];
     Ok(())
 }
 
 /// `1+ (n -- sum)`
 fn add1(forth: &mut Forth) -> Result<(), Error> {
-    let a = forth.pop()?;
-    forth.push(a.saturating_add(1));
+    if forth.data_stack.is_empty() {
+        return Err(StackUnderflow);
+    }
+    let n = forth.data_stack.len();
+    forth.data_stack[n - 1].0 += 1;
     Ok(())
 }
 
 /// `1- (n -- diff)`
 fn sub1(forth: &mut Forth) -> Result<(), Error> {
-    let a = forth.pop()?;
-    forth.push(a.saturating_sub(1));
+    if forth.data_stack.is_empty() {
+        return Err(StackUnderflow);
+    }
+    let n = forth.data_stack.len();
+    forth.data_stack[n - 1].0 -= 1;
     Ok(())
 }
 
 /// `2* (n -- prod)`
 fn mul2(forth: &mut Forth) -> Result<(), Error> {
-    let a = forth.pop()?;
-    forth.push(a << 1);
+    if forth.data_stack.is_empty() {
+        return Err(StackUnderflow);
+    }
+    let n = forth.data_stack.len();
+    forth.data_stack[n - 1].0 <<= 1;
     Ok(())
 }
 
 /// `2/ (n -- quot)`
 fn div2(forth: &mut Forth) -> Result<(), Error> {
-    let a = forth.pop()?;
-    forth.push(a >> 1);
+    if forth.data_stack.is_empty() {
+        return Err(StackUnderflow);
+    }
+    let n = forth.data_stack.len();
+    forth.data_stack[n - 1].0 >>= 1;
     Ok(())
 }
 
 /// `= (n1 n2 -- flag)`
 fn eq(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(if a == b { -1 } else { 0 });
+    forth.push((a == b).into());
     Ok(())
 }
 
 /// `<> (n1 n2 -- flag)`
 fn ne(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(if a != b { -1 } else { 0 });
+    forth.push((a != b).into());
     Ok(())
 }
 
 /// `< (n1 n2 -- flag)`
 fn lt(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(if a < b { -1 } else { 0 });
+    forth.push((a < b).into());
     Ok(())
 }
 
 /// `> (n1 n2 -- flag)`
 fn gt(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(if a > b { -1 } else { 0 });
+    forth.push((a > b).into());
     Ok(())
 }
 
 /// `not (n -- n)`
 fn not(forth: &mut Forth) -> Result<(), Error> {
-    let a = forth.pop()?;
-    forth.push(if a != 0 { 0 } else { -1 });
+    if forth.data_stack.is_empty() {
+        return Err(StackUnderflow);
+    }
+    let n = forth.data_stack.len();
+    forth.data_stack[n - 1] = !forth.data_stack[n - 1];
     Ok(())
 }
 
 /// `and (n1 n2 -- n3)`
 fn and(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(if a != 0 { b } else { a });
+    forth.push(a & b);
     Ok(())
 }
 
 /// `or (n1 n2 -- n3)`
 fn or(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(if a != 0 { a } else { b });
+    forth.push(a | b);
     Ok(())
 }
 
 /// `xor (n1 n2 -- n3)`
 fn xor(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
-    forth.push(-((a != 0) as i32 ^ (b != 0) as i32));
+    forth.push(a ^ b);
     Ok(())
 }
 
@@ -308,12 +318,12 @@ fn dup(forth: &mut Forth) -> Result<(), Error> {
 /// `pick (ni ... n0 i -- ni ... n0 ni)`
 /// Copy i-th value to the top of the stack.
 fn pick(forth: &mut Forth) -> Result<(), Error> {
-    let index = forth.pop()?;
+    let index = usize::from(forth.pop()?);
     let n = forth.data_stack.len();
-    if index < 0 || n <= index as usize {
+    if n <= index {
         return Err(StackUnderflow);
     }
-    let value = forth.data_stack.get(n - index as usize).unwrap();
+    let value = forth.data_stack.get(n - index).unwrap();
     forth.push(*value);
     Ok(())
 }
@@ -321,12 +331,12 @@ fn pick(forth: &mut Forth) -> Result<(), Error> {
 /// `roll (ni ... n0 i -- ni-1 ... n0 ni)`
 /// Move i-th value to the top of the stack.
 fn roll(forth: &mut Forth) -> Result<(), Error> {
-    let index = forth.pop()?;
+    let index = usize::from(forth.pop()?);
     let n = forth.data_stack.len();
-    if index < 0 || n <= index as usize {
+    if n <= index {
         return Err(StackUnderflow);
     }
-    let value = forth.data_stack.remove(n - index as usize);
+    let value = forth.data_stack.remove(n - index);
     forth.push(value);
     Ok(())
 }
@@ -384,13 +394,7 @@ fn dot(forth: &mut Forth) -> Result<(), Error> {
 /// Take the value from the top of the stack and print it as a character.
 fn emit(forth: &mut Forth) -> Result<(), Error> {
     let val = forth.pop()?;
-    if let Ok(u) = val.try_into() {
-        if let Some(c) = char::from_u32(u) {
-            print!("{}", c);
-            return Ok(());
-        }
-    }
-    print!("�");
+    print!("{}", char::from(val));
     Ok(())
 }
 
@@ -422,7 +426,7 @@ fn words(forth: &mut Forth) -> Result<(), Error> {
 /// Set the the variable at addr to n.
 fn set(forth: &mut Forth) -> Result<(), Error> {
     let (val, addr) = forth.pop2()?;
-    let addr = addr as usize;
+    let addr = usize::from(addr);
     if addr >= forth.memory.len() {
         return Err(InvalidAddress);
     }
@@ -433,7 +437,7 @@ fn set(forth: &mut Forth) -> Result<(), Error> {
 /// `@ (addr -- n)`
 /// Get the value of the variable at addr.
 fn fetch(forth: &mut Forth) -> Result<(), Error> {
-    let addr = forth.pop()? as usize;
+    let addr = usize::from(forth.pop()?);
     let val = forth.memory.get(addr).ok_or(InvalidAddress)?;
     forth.push(*val);
     Ok(())
@@ -449,7 +453,7 @@ fn leave(_: &mut Forth) -> Result<(), Error> {
 /// If flag is false, break the loop.
 fn while_cond(forth: &mut Forth) -> Result<(), Error> {
     let flag = forth.pop()?;
-    if flag == 0 {
+    if !flag.is_true() {
         return Err(LeaveLoop);
     }
     Ok(())
@@ -459,7 +463,7 @@ fn while_cond(forth: &mut Forth) -> Result<(), Error> {
 /// If flag is true, break the loop.
 fn until(forth: &mut Forth) -> Result<(), Error> {
     let flag = forth.pop()?;
-    if flag != 0 {
+    if flag.is_true() {
         return Err(LeaveLoop);
     }
     Ok(())
@@ -468,7 +472,7 @@ fn until(forth: &mut Forth) -> Result<(), Error> {
 /// `depth (-- n)`
 /// The depth of the stack.
 fn depth(forth: &mut Forth) -> Result<(), Error> {
-    forth.push(forth.data_stack.len() as i32);
+    forth.push(forth.data_stack.len().into());
     Ok(())
 }
 
@@ -506,16 +510,3 @@ fn loop_j(forth: &mut Forth) -> Result<(), Error> {
     forth.push(*value);
     Ok(())
 }
-
-// FIXME
-// /// Treat signed integer bytes as representation of a unsigned integer.
-// fn signed_to_unsigned(value: i32) -> u32 {
-//     let bytes = value.to_ne_bytes();
-//     u32::from_be_bytes(bytes)
-// }
-
-// /// Treat unsigned integer bytes as representation of a signed integer.
-// fn unsigned_to_signed(value: u32) -> i32 {
-//     let bytes = value.to_ne_bytes();
-//     i32::from_be_bytes(bytes)
-// }

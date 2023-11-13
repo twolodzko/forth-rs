@@ -1,6 +1,7 @@
 use crate::{
     errors::Error::{self, CustomError, Redefined, StackUnderflow},
-    expressions::{Expr, Int},
+    expressions::Expr,
+    numbers::Int,
     parser::Parser,
 };
 use std::{
