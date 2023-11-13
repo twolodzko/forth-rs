@@ -31,6 +31,7 @@ impl Int {
         Int(self.0.abs())
     }
 
+    #[inline]
     pub fn from_addr(value: usize) -> Self {
         #[cfg(target_pointer_width = "64")]
         let value = saturating_u64_to_u32(value as u64);
@@ -39,6 +40,7 @@ impl Int {
         Int(unsigned_to_signed(value))
     }
 
+    #[inline]
     pub fn to_addr(self) -> usize {
         signed_to_unsigned(self.0) as usize
     }
