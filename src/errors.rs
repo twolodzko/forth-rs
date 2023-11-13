@@ -13,6 +13,7 @@ pub enum Error {
     Leave,
     Exit,
     Quit,
+    Recurse,
 }
 
 impl Display for Error {
@@ -27,7 +28,7 @@ impl Display for Error {
             CompileTimeWord => "interpreting a compile-only word".into(),
             CustomError(msg) => msg.into(),
             ParsingError(msg) => msg.into(),
-            Exit | Quit | Leave => unreachable!(),
+            Exit | Quit | Leave | Recurse => unreachable!(),
         };
         write!(f, "{}", msg)
     }

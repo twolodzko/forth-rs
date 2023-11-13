@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::{
-    errors::Error::{self, CompileTimeWord, Exit, Leave, UnknownWord},
+    errors::Error::{self, CompileTimeWord, Exit, Leave, Recurse, UnknownWord},
     forth::Forth,
     numbers::Int,
 };
@@ -69,11 +69,18 @@ impl Expr {
                 forth.define_word(name, func)
             }
             Function(body) => {
-                for obj in body {
+                let mut i = 0;
+                while i < body.len() {
+                    let obj = &body[i];
                     match obj.execute(forth) {
+                        Err(Recurse) => {
+                            i = 0;
+                            continue;
+                        }
                         Err(Exit) => return Ok(()),
                         other => other?,
                     }
+                    i += 1;
                 }
                 Ok(())
             }

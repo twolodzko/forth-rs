@@ -32,5 +32,8 @@
 : >=  ( n1 n2 -- flag )  < not ;
 : <=  ( n1 n2 -- flag )  > not ;
 
+\ Conditionally exit.
+: ?exit  ( x -- )  if exit then ;
+
 \ Alias
 : create variable ;

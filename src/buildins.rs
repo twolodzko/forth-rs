@@ -1,5 +1,7 @@
 use crate::{
-    errors::Error::{self, DivisionByZero, Exit, InvalidAddress, Leave, Quit, StackUnderflow},
+    errors::Error::{
+        self, DivisionByZero, Exit, InvalidAddress, Leave, Quit, Recurse, StackUnderflow,
+    },
     expressions::Expr::{self, Callable, Constant, Dummy},
     forth::Forth,
     numbers::Int,
@@ -78,7 +80,6 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("again", Dummy),
     ("do", Dummy),
     ("loop", Dummy),
-    ("leave", Callable(leave)),
     ("i", Callable(copy_from_return)),
     ("j", Callable(loop_j)),
     // other
@@ -87,6 +88,8 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("bye", Callable(bye)),
     ("exit", Callable(exit)),
     ("quit", Callable(quit)),
+    ("leave", Callable(leave)),
+    ("recurse", Callable(recurse)),
 ];
 
 impl Forth {
@@ -586,6 +589,12 @@ fn bye(_: &mut Forth) -> Result<(), Error> {
 /// Break the loop.
 fn leave(_: &mut Forth) -> Result<(), Error> {
     Err(Leave)
+}
+
+/// `recurse (--)`
+/// Recurse back to the definition of the function.
+fn recurse(_: &mut Forth) -> Result<(), Error> {
+    Err(Recurse)
 }
 
 /// `exit (--)`

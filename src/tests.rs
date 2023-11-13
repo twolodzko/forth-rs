@@ -71,6 +71,7 @@ use test_case::test_case;
 #[test_case(": f 42 ; f", &[], &[42]; "trivial function")]
 #[test_case(": f if 10 else 20 then ; f", &[-1], &[10]; "function with if-else-then true branch")]
 #[test_case(": f if 10 else 20 then ; f", &[0], &[20]; "function with if-else-then false branch")]
+#[test_case(": f dup 1 + dup 5 < if recurse then ; f", &[0], &[0, 1, 2, 3, 4, 5]; "recursion")]
 #[test_case("begin 1 + dup 10 > until", &[0], &[11]; "begin until loop")]
 #[test_case("begin 1 + dup 10 < while repeat", &[0], &[10]; "begin while loop")]
 #[test_case("begin leave again", &[], &[]; "begin leave again")]
