@@ -58,8 +58,10 @@ impl Forth {
     /// Go to next word and evaluate it.
     #[inline]
     pub(crate) fn eval_next(&mut self, parser: &mut Parser) -> Option<Result<(), Error>> {
-        let expr = parser.next()?;
-        Some(expr.execute(self))
+        match parser.next()? {
+            Ok(expr) => Some(expr.execute(self)),
+            Err(msg) => Some(Err(msg)),
+        }
     }
 
     /// Push value to the stack.
@@ -85,8 +87,8 @@ impl Forth {
     /// Define a new word, return an error on redefinition.
     #[inline]
     pub(crate) fn define_word(&mut self, name: &str, value: Expr) -> Result<(), Error> {
-        if self.dictionary.insert(name.to_string(), value).is_some() {
-            return Err(Redefined(name.to_string()));
+        if self.dictionary.insert(name.into(), value).is_some() {
+            return Err(Redefined(name.into()));
         }
         Ok(())
     }
@@ -100,11 +102,7 @@ impl Forth {
     /// The list of all the defined words.
     #[inline]
     pub(crate) fn words(&self) -> Vec<String> {
-        let mut words = self
-            .dictionary
-            .keys()
-            .map(|s| s.to_string())
-            .collect::<Vec<String>>();
+        let mut words = self.dictionary.keys().map(|s| s.into()).collect::<Vec<_>>();
         words.sort();
         words
     }

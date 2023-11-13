@@ -1,7 +1,11 @@
 use crate::{
     errors::Error::{self, DivisionByZero, StackUnderflow},
-    expressions::Int,
+    expressions::{
+        Expr::{self, Begin, IfElseThen, Loop, NewFunction, Word},
+        Int,
+    },
     forth::Forth,
+    parser::Parser,
 };
 use test_case::test_case;
 
@@ -182,7 +186,7 @@ fn constants() {
     assert_eq!(Some(Constant(123)), forth.get_word("y"));
 
     assert_eq!(
-        Err(Error::Redefined("x".to_string())),
+        Err(Error::Redefined("x".into())),
         forth.eval_string("0 constant x"),
         "errors on redefinition"
     );
@@ -220,4 +224,149 @@ fn return_stack() {
     assert!(forth.eval_string("r>").is_ok());
     assert_eq!(forth.data_stack, &[42, 42]);
     assert_eq!(forth.return_stack, &[]);
+}
+
+#[test_case(
+        "",
+        &[];
+        "nothing"
+    )]
+#[test_case(
+        "hello",
+        &[Word("hello".into())];
+        "just a word"
+    )]
+#[test_case(
+        "HELLO",
+        &[Word("hello".into())];
+        "just a word uppercase"
+    )]
+#[test_case(
+        " \t\t hello",
+        &[Word("hello".into())];
+        "spaces before word"
+    )]
+#[test_case(
+        "hello \t\t  ",
+        &[Word("hello".into())];
+        "spaces after word"
+    )]
+#[test_case(
+        " : foo ; ",
+        &[NewFunction("foo".into(), vec![])];
+        "empty function"
+    )]
+#[test_case(
+        " : foo bar 2 + ; ",
+        &[NewFunction(
+            "foo".into(),
+            vec![Word("bar".into()), Word("2".into()), Word("+".into())]
+        )];
+        "some function"
+    )]
+#[test_case(
+        " : foo ( n1 n2 -- n3 ) bar 2 + ; ",
+        &[NewFunction(
+            "foo".into(),
+            vec![Word("bar".into()), Word("2".into()), Word("+".into())]
+        )];
+        "some function with a comment"
+    )]
+#[test_case(
+        " : FOO BAR 2 + ; ",
+        &[NewFunction(
+            "foo".into(),
+            vec![Word("bar".into()), Word("2".into()), Word("+".into())]
+        )];
+        "some function uppercase"
+    )]
+#[test_case(
+        " if then ",
+        &[IfElseThen(vec![], vec![])];
+        "empty if else then block"
+    )]
+#[test_case(
+        " if yes . then ",
+        &[IfElseThen(vec![Word("yes".into()), Word(".".into())], vec![])];
+        "if then block"
+    )]
+#[test_case(
+        " if yes + else no - . then ",
+        &[IfElseThen(
+            vec![Word("yes".into()), Word("+".into())],
+            vec![Word("no".into()), Word("-".into()), Word(".".into())]
+        )];
+        "if else then block"
+    )]
+#[test_case(
+        " IF YES + ELSE NO - . THEN ",
+        &[IfElseThen(
+            vec![Word("yes".into()), Word("+".into())],
+            vec![Word("no".into()), Word("-".into()), Word(".".into())]
+        )];
+        "if else then block uppercase"
+    )]
+#[test_case(
+        " do loop ",
+        &[Loop(vec![])];
+        "empty do loop"
+    )]
+#[test_case(
+        " 5 0 do i . loop ",
+        &[
+            Word("5".into()), Word("0".into()),
+            Loop(vec![Word("i".into()), Word(".".into())])
+        ];
+        "do loop"
+    )]
+#[test_case(
+        " 5 0 DO I . LOOP ",
+        &[
+            Word("5".into()), Word("0".into()),
+            Loop(vec![Word("i".into()), Word(".".into())])
+        ];
+        "do loop uppercase"
+    )]
+#[test_case(
+        " begin again ",
+        &[Begin(vec![])];
+        "empty begin again"
+    )]
+#[test_case(
+        " begin until ",
+        &[Begin(vec![Word("until".into())])];
+        "empty begin until"
+    )]
+#[test_case(
+        " begin while repeat ",
+        &[Begin(vec![Word("while".into())])];
+        "empty begin while"
+    )]
+#[test_case(
+        "hello ( this is a comment ) world",
+        &[Word("hello".into()), Word("world".into())];
+        "skip comment in the middle"
+    )]
+fn parsing(input: &str, expected: &[Expr]) {
+    let parser = Parser::from(input);
+    let result: Result<Vec<Expr>, Error> = parser.collect();
+    assert_eq!(result.unwrap(), expected);
+}
+
+#[test_case(": foo bar"; "unclosed function")]
+#[test_case("if 2 +"; "unclosed if")]
+#[test_case("if 2 + else 3 -"; "unclosed if else")]
+#[test_case("begin foo bar"; "unclosed begin")]
+#[test_case("begin foo while bar"; "unclosed begin while")]
+#[test_case("do i . 2 +"; "unclosed do")]
+#[test_case("include"; "include without continuation")]
+#[test_case("variable"; "variable without continuation")]
+#[test_case("constant"; "constant without continuation")]
+#[test_case(".\" hello, world!"; "unclosed string")]
+#[test_case(".( hello, world!"; "unclosed instant print")]
+#[test_case("( foo bar baz"; "unclosed comment")]
+fn parsing_errors(input: &str) {
+    let parser = Parser::from(input);
+    let result: Result<Vec<Expr>, Error> = parser.collect();
+    assert!(result.is_err());
 }

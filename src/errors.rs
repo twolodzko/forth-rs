@@ -5,27 +5,27 @@ pub enum Error {
     StackUnderflow,
     UnknownWord(String),
     Redefined(String),
-    ParsingError,
     InvalidAddress,
     LeaveLoop,
     DivisionByZero,
     CompileTimeWord,
     CustomError(String),
+    ParsingError(String),
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Error::*;
         let msg = match self {
-            StackUnderflow => "stack underflow".to_string(),
+            StackUnderflow => "stack underflow".into(),
             UnknownWord(word) => format!("{} is an unknown word", word),
             Redefined(name) => format!("{} was redefined", name),
-            ParsingError => "parsing error".to_string(),
-            InvalidAddress => "invalid memory address".to_string(),
-            LeaveLoop => "leaving the loop".to_string(),
-            DivisionByZero => "division by zero".to_string(),
-            CompileTimeWord => "interpreting a compile-only word".to_string(),
-            CustomError(msg) => msg.to_string(),
+            InvalidAddress => "invalid memory address".into(),
+            LeaveLoop => "leaving the loop".into(),
+            DivisionByZero => "division by zero".into(),
+            CompileTimeWord => "interpreting a compile-only word".into(),
+            CustomError(msg) => msg.into(),
+            ParsingError(msg) => msg.into(),
         };
         write!(f, "{}", msg)
     }

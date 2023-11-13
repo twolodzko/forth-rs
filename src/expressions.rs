@@ -14,6 +14,7 @@ macro_rules! maybe_break_loop {
     };
 }
 
+/// The numeric data type.
 pub type Int = i32;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -49,6 +50,7 @@ pub enum Expr {
 }
 
 impl Expr {
+    /// Execute the expression.
     pub fn execute(&self, forth: &mut Forth) -> Result<(), Error> {
         use Expr::*;
         match self {
@@ -59,7 +61,7 @@ impl Expr {
                         forth.push(num);
                         Ok(())
                     } else {
-                        Err(UnknownWord(word.to_string()))
+                        Err(UnknownWord(word.into()))
                     }
                 }
             },
@@ -115,7 +117,7 @@ impl Expr {
                     Some(Dummy) => print!("<special word: {}>", word),
                     Some(func @ Function(_)) => print!(": {} {} ;", word, func),
                     Some(other) => print!("{}", other),
-                    None => return Err(UnknownWord(word.to_string())),
+                    None => return Err(UnknownWord(word.into())),
                 }
                 Ok(())
             }
@@ -124,6 +126,7 @@ impl Expr {
     }
 }
 
+/// Execute all the expressions in `body`.
 #[inline]
 fn execute_many(forth: &mut Forth, body: &[Expr]) -> Result<(), Error> {
     for obj in body {
@@ -145,7 +148,7 @@ impl Display for Expr {
 
         use Expr::*;
         let string = match self {
-            Word(string) => string.to_string(),
+            Word(string) => string.into(),
             Print(string) => format!(".\" {}\"", string),
             Callable(obj) => format!("<func: {:?}>", &obj),
             NewFunction(name, body) => format!(": {} {} ;", name, vec_to_string(body)),
@@ -168,7 +171,7 @@ impl Display for Expr {
             NewVariable(name) => format!("variable {}", name),
             Include(path) => format!("include {}", path),
             See(word) => format!("see {}", word),
-            Dummy => "<special word>".to_string(),
+            Dummy => "<special word>".into(),
         };
         write!(f, "{}", string)
     }

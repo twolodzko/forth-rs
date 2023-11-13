@@ -28,6 +28,8 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("/mod", Callable(div_rem)),
     ("abs", Callable(abs)),
     ("negate", Callable(negate)),
+    ("1+", Callable(add1)),
+    ("1-", Callable(sub1)),
     ("2*", Callable(mul2)),
     ("2/", Callable(div2)),
     // data stack
@@ -76,7 +78,6 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("loop", Dummy),
     ("i", Callable(copy_from_return)),
     ("j", Callable(loop_j)),
-    // ("+loop", Dummy),
 ];
 
 impl Forth {
@@ -198,6 +199,20 @@ fn negate(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
+/// `1+ (n -- sum)`
+fn add1(forth: &mut Forth) -> Result<(), Error> {
+    let a = forth.pop()?;
+    forth.push(a.saturating_add(1));
+    Ok(())
+}
+
+/// `1- (n -- diff)`
+fn sub1(forth: &mut Forth) -> Result<(), Error> {
+    let a = forth.pop()?;
+    forth.push(a.saturating_sub(1));
+    Ok(())
+}
+
 /// `2* (n -- prod)`
 fn mul2(forth: &mut Forth) -> Result<(), Error> {
     let a = forth.pop()?;
@@ -290,7 +305,7 @@ fn dup(forth: &mut Forth) -> Result<(), Error> {
     }
 }
 
-/// `pick (ni ... n0 i -- ni ... n0 ni )`
+/// `pick (ni ... n0 i -- ni ... n0 ni)`
 /// Copy i-th value to the top of the stack.
 fn pick(forth: &mut Forth) -> Result<(), Error> {
     let index = forth.pop()?;
@@ -303,7 +318,7 @@ fn pick(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
-/// `roll (ni ... n0 i -- ni-1 ... n0 ni )`
+/// `roll (ni ... n0 i -- ni-1 ... n0 ni)`
 /// Move i-th value to the top of the stack.
 fn roll(forth: &mut Forth) -> Result<(), Error> {
     let index = forth.pop()?;
