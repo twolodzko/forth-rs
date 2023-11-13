@@ -30,6 +30,18 @@ impl Int {
     pub fn abs(&self) -> Self {
         Int(self.0.abs())
     }
+
+    pub fn from_addr(value: usize) -> Self {
+        #[cfg(target_pointer_width = "64")]
+        let value = saturating_u64_to_u32(value as u64);
+        #[cfg(target_pointer_width = "32")]
+        let value = value as u32;
+        Int(unsigned_to_signed(value))
+    }
+
+    pub fn to_addr(self) -> usize {
+        signed_to_unsigned(self.0) as usize
+    }
 }
 
 impl Add for Int {
@@ -196,20 +208,6 @@ impl Display for Int {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
-    }
-}
-
-impl Int {
-    pub fn from_addr(value: usize) -> Self {
-        #[cfg(target_pointer_width = "64")]
-        let value = saturating_u64_to_u32(value as u64);
-        #[cfg(target_pointer_width = "32")]
-        let value = value as u32;
-        Int(unsigned_to_signed(value))
-    }
-
-    pub fn to_addr(self) -> usize {
-        signed_to_unsigned(self.0) as usize
     }
 }
 
