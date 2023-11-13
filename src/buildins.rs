@@ -1,5 +1,5 @@
 use crate::{
-    errors::Error::{self, DivisionByZero, InvalidAddress, LeaveLoop, StackUnderflow},
+    errors::Error::{self, DivisionByZero, Exit, InvalidAddress, Leave, Quit, StackUnderflow},
     expressions::Expr::{self, Callable, Constant, Dummy},
     forth::Forth,
     numbers::Int,
@@ -49,20 +49,19 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("r>", Callable(from_return)),
     ("r@", Callable(copy_from_return)),
     (".r", Callable(print_return)),
-    // constants and variables
+    // constants, variables, arrays, and memory
     ("constant", Dummy),
     ("variable", Dummy),
     ("!", Callable(set)),
     ("@", Callable(fetch)),
-    (".m", Callable(print_memory)),
+    ("dump", Callable(dump)),
+    ("allot", Callable(allot)),
+    ("here", Callable(here)),
+    (",", Callable(store)),
     // i/o
     ("cr", Callable(cr)),
     (".", Callable(dot)),
     ("emit", Callable(emit)),
-    ("u.", Callable(print_unsigned)),
-    // helpers
-    ("words", Callable(words)),
-    ("see", Dummy),
     // compile-only words and the words handled specially by parser
     ("if", Dummy),
     ("then", Dummy),
@@ -82,6 +81,12 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("loop", Dummy),
     ("i", Callable(copy_from_return)),
     ("j", Callable(loop_j)),
+    // other
+    ("words", Callable(words)),
+    ("see", Dummy),
+    ("bye", Callable(bye)),
+    ("exit", Callable(exit)),
+    ("quit", Callable(quit)),
 ];
 
 impl Forth {
@@ -344,19 +349,6 @@ fn roll(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
-/// `clearstack (--)`
-fn clearstack(forth: &mut Forth) -> Result<(), Error> {
-    forth.data_stack.clear();
-    Ok(())
-}
-
-/// `drop (n --)`
-/// Drop the value from the top of the stack.
-fn drop(forth: &mut Forth) -> Result<(), Error> {
-    forth.pop()?;
-    Ok(())
-}
-
 /// `rot (n1 n2 n3 -- n2 n3 n1)`
 fn rot(forth: &mut Forth) -> Result<(), Error> {
     let n = forth.data_stack.len();
@@ -379,6 +371,19 @@ fn over(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
+/// `drop (n --)`
+/// Drop the value from the top of the stack.
+fn drop(forth: &mut Forth) -> Result<(), Error> {
+    forth.pop()?;
+    Ok(())
+}
+
+/// `clearstack (--)`
+fn clearstack(forth: &mut Forth) -> Result<(), Error> {
+    forth.data_stack.clear();
+    Ok(())
+}
+
 /// `cr (--)`
 /// Print newline.
 fn cr(_: &mut Forth) -> Result<(), Error> {
@@ -398,14 +403,6 @@ fn dot(forth: &mut Forth) -> Result<(), Error> {
 fn emit(forth: &mut Forth) -> Result<(), Error> {
     let val = forth.pop()?;
     print!("{}", char::from(val));
-    Ok(())
-}
-
-/// `u. (n --)`
-/// Take the value from the top of the stack and print it as an unsigned number.
-fn print_unsigned(forth: &mut Forth) -> Result<(), Error> {
-    let val = forth.pop()?;
-    print!("{}", val.to_addr());
     Ok(())
 }
 
@@ -437,7 +434,7 @@ fn words(forth: &mut Forth) -> Result<(), Error> {
 /// Set the the variable at addr to n.
 fn set(forth: &mut Forth) -> Result<(), Error> {
     let (val, addr) = forth.pop2()?;
-    let addr = addr.to_addr();
+    let addr = usize::from(addr);
     if addr >= forth.memory.len() {
         return Err(InvalidAddress);
     }
@@ -448,33 +445,62 @@ fn set(forth: &mut Forth) -> Result<(), Error> {
 /// `@ (addr -- n)`
 /// Get the value of the variable at addr.
 fn fetch(forth: &mut Forth) -> Result<(), Error> {
-    let addr = forth.pop()?.to_addr();
+    let addr = usize::from(forth.pop()?);
     let val = forth.memory.get(addr).ok_or(InvalidAddress)?;
     forth.push(*val);
     Ok(())
 }
 
-/// `.m (--)`
-/// Print the memory and it's size.
-fn print_memory(forth: &mut Forth) -> Result<(), Error> {
-    let show_max = 10;
-    let memory = forth
-        .memory
-        .iter()
-        .take(show_max)
-        .map(|x| x.to_string())
-        .collect::<Vec<_>>()
-        .join(" ");
-    let n = forth.memory.len();
-    let dots = if n > show_max { "..." } else { "" };
-    print!(" <{}> {}{}", n, memory, dots);
+/// `dump (addr count --)`
+/// Print count cells at the memory address addr.
+fn dump(forth: &mut Forth) -> Result<(), Error> {
+    let (start, count) = forth.pop2()?;
+    let start = usize::from(start);
+    let end = start + usize::from(count);
+    if end > forth.memory.len() {
+        return Err(InvalidAddress);
+    }
+    print!(
+        "{}",
+        &forth.memory[start..end]
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>()
+            .join(" ")
+    );
+    Ok(())
+}
+
+/// `allot (count --)`
+/// Allocate count number of memory cells.
+fn allot(forth: &mut Forth) -> Result<(), Error> {
+    let count = forth.pop()?;
+    for _ in 0..count.0 {
+        forth.memory.push(Int(0));
+    }
+    Ok(())
+}
+
+/// `, (n --)`
+/// Store value in memory.
+fn store(forth: &mut Forth) -> Result<(), Error> {
+    let value = forth.pop()?;
+    forth.memory.push(value);
+    Ok(())
+}
+
+/// `here (-- n)`
+/// Current memory location.
+fn here(forth: &mut Forth) -> Result<(), Error> {
+    let addr = Int::from(forth.memory.len());
+    forth.push(addr);
     Ok(())
 }
 
 /// `leave (--)`
 /// Break the loop.
 fn leave(_: &mut Forth) -> Result<(), Error> {
-    Err(LeaveLoop)
+    Err(Leave)
 }
 
 /// `while (n --)`
@@ -482,7 +508,7 @@ fn leave(_: &mut Forth) -> Result<(), Error> {
 fn while_cond(forth: &mut Forth) -> Result<(), Error> {
     let flag = forth.pop()?;
     if !flag.is_true() {
-        return Err(LeaveLoop);
+        return Err(Leave);
     }
     Ok(())
 }
@@ -492,7 +518,7 @@ fn while_cond(forth: &mut Forth) -> Result<(), Error> {
 fn until(forth: &mut Forth) -> Result<(), Error> {
     let flag = forth.pop()?;
     if flag.is_true() {
-        return Err(LeaveLoop);
+        return Err(Leave);
     }
     Ok(())
 }
@@ -554,4 +580,22 @@ fn loop_j(forth: &mut Forth) -> Result<(), Error> {
     let value = forth.return_stack.get(index).unwrap();
     forth.push(*value);
     Ok(())
+}
+
+/// `bye (--)`
+fn bye(_: &mut Forth) -> Result<(), Error> {
+    std::process::exit(0);
+}
+
+/// `exit (--)`
+/// Early return from the function.
+fn exit(_: &mut Forth) -> Result<(), Error> {
+    Err(Exit)
+}
+
+/// `quit (--)`
+/// Clear the return stack and return to the terminal.
+fn quit(forth: &mut Forth) -> Result<(), Error> {
+    forth.return_stack.clear();
+    Err(Quit)
 }

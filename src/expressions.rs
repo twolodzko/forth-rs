@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::{
-    errors::Error::{self, CompileTimeWord, LeaveLoop, UnknownWord},
+    errors::Error::{self, CompileTimeWord, Exit, Leave, UnknownWord},
     forth::Forth,
     numbers::Int,
 };
@@ -9,7 +9,7 @@ use crate::{
 macro_rules! maybe_break_loop {
     ( $expr:expr ) => {
         match $expr {
-            Err(LeaveLoop) => break,
+            Err(Leave) => break,
             result => result?,
         }
     };
@@ -68,7 +68,15 @@ impl Expr {
                 let func = Function(func.clone());
                 forth.define_word(name, func)
             }
-            Function(body) => execute_many(forth, body),
+            Function(body) => {
+                for obj in body {
+                    match obj.execute(forth) {
+                        Err(Exit) => return Ok(()),
+                        other => other?,
+                    }
+                }
+                Ok(())
+            }
             IfElseThen(then, other) => {
                 if forth.pop()?.is_true() {
                     execute_many(forth, then)
@@ -102,7 +110,7 @@ impl Expr {
             NewVariable(name) => {
                 forth.memory.push(Int(0));
                 let addr = forth.memory.len() - 1;
-                forth.define_word(name, Constant(Int::from_addr(addr)))?;
+                forth.define_word(name, Constant(Int::from(addr)))?;
                 Ok(())
             }
             Include(path) => forth.eval_file(path),
@@ -169,7 +177,7 @@ impl Display for Expr {
             NewVariable(name) => format!("variable {}", name),
             Include(path) => format!("include {}", path),
             See(word) => format!("see {}", word),
-            Dummy => "<special word>".into(),
+            Dummy => unreachable!(),
         };
         write!(f, "{}", string)
     }

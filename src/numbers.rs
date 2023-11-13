@@ -30,20 +30,6 @@ impl Int {
     pub fn abs(&self) -> Self {
         Int(self.0.abs())
     }
-
-    #[inline]
-    pub fn from_addr(value: usize) -> Self {
-        #[cfg(target_pointer_width = "64")]
-        let value = saturating_u64_to_u32(value as u64);
-        #[cfg(target_pointer_width = "32")]
-        let value = value as u32;
-        Int(unsigned_to_signed(value))
-    }
-
-    #[inline]
-    pub fn to_addr(self) -> usize {
-        signed_to_unsigned(self.0) as usize
-    }
 }
 
 impl Add for Int {
@@ -223,30 +209,4 @@ fn saturating_i64_to_i32(value: i64) -> i32 {
     } else {
         value as i32
     }
-}
-
-/// Transform i64 to i32 rounding the i64 values to the limits of i32.
-#[inline]
-fn saturating_u64_to_u32(value: u64) -> u32 {
-    if value < u32::MIN as u64 {
-        u32::MIN
-    } else if value > u32::MAX as u64 {
-        u32::MAX
-    } else {
-        value as u32
-    }
-}
-
-/// Treat signed integer bytes as representation of a unsigned integer.
-#[inline]
-fn signed_to_unsigned(value: i32) -> u32 {
-    let bytes = value.to_ne_bytes();
-    u32::from_be_bytes(bytes)
-}
-
-/// Treat unsigned integer bytes as representation of a signed integer.
-#[inline]
-fn unsigned_to_signed(value: u32) -> i32 {
-    let bytes = value.to_ne_bytes();
-    i32::from_be_bytes(bytes)
 }
