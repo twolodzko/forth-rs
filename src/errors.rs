@@ -6,11 +6,11 @@ pub enum Error {
     UnknownWord(String),
     Redefined(String),
     InvalidAddress,
-    Leave,
     DivisionByZero,
     CompileTimeWord,
     CustomError(String),
     ParsingError(String),
+    Leave,
     Exit,
     Quit,
 }

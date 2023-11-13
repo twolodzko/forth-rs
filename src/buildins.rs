@@ -72,13 +72,13 @@ const BUILDINS: &[(&str, Expr)] = &[
     (".\"", Dummy),
     ("include", Dummy),
     // looping
-    ("leave", Callable(leave)),
     ("while", Callable(while_cond)),
     ("until", Callable(until)),
     ("begin", Dummy),
     ("again", Dummy),
     ("do", Dummy),
     ("loop", Dummy),
+    ("leave", Callable(leave)),
     ("i", Callable(copy_from_return)),
     ("j", Callable(loop_j)),
     // other
@@ -497,12 +497,6 @@ fn here(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
-/// `leave (--)`
-/// Break the loop.
-fn leave(_: &mut Forth) -> Result<(), Error> {
-    Err(Leave)
-}
-
 /// `while (n --)`
 /// If flag is false, break the loop.
 fn while_cond(forth: &mut Forth) -> Result<(), Error> {
@@ -583,8 +577,15 @@ fn loop_j(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `bye (--)`
+/// Exit Forth.
 fn bye(_: &mut Forth) -> Result<(), Error> {
     std::process::exit(0);
+}
+
+/// `leave (--)`
+/// Break the loop.
+fn leave(_: &mut Forth) -> Result<(), Error> {
+    Err(Leave)
 }
 
 /// `exit (--)`
