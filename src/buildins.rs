@@ -48,15 +48,18 @@ const BUILDINS: &[(&str, Expr)] = &[
     (">r", Callable(to_return)),
     ("r>", Callable(from_return)),
     ("r@", Callable(copy_from_return)),
+    (".r", Callable(print_return)),
     // constants and variables
     ("constant", Dummy),
     ("variable", Dummy),
     ("!", Callable(set)),
     ("@", Callable(fetch)),
+    (".m", Callable(print_memory)),
     // i/o
     ("cr", Callable(cr)),
     (".", Callable(dot)),
     ("emit", Callable(emit)),
+    ("u.", Callable(print_unsigned)),
     // helpers
     ("words", Callable(words)),
     ("see", Dummy),
@@ -398,6 +401,14 @@ fn emit(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
+/// `u. (n --)`
+/// Take the value from the top of the stack and print it as an unsigned number.
+fn print_unsigned(forth: &mut Forth) -> Result<(), Error> {
+    let val = forth.pop()?;
+    print!("{}", val.to_addr());
+    Ok(())
+}
+
 /// `.s (--)`
 /// Print the stack and it's size.
 fn print_stack(forth: &mut Forth) -> Result<(), Error> {
@@ -411,7 +422,7 @@ fn print_stack(forth: &mut Forth) -> Result<(), Error> {
         .join(" ");
     let n = forth.data_stack.len();
     let dots = if n > show_max { "..." } else { "" };
-    print!(" <{}> {}{}", forth.data_stack.len(), stack, dots);
+    print!(" <{}> {}{}", n, stack, dots);
     Ok(())
 }
 
@@ -426,20 +437,37 @@ fn words(forth: &mut Forth) -> Result<(), Error> {
 /// Set the the variable at addr to n.
 fn set(forth: &mut Forth) -> Result<(), Error> {
     let (val, addr) = forth.pop2()?;
-    let addr = usize::from(addr);
+    let addr = addr.to_addr();
     if addr >= forth.memory.len() {
         return Err(InvalidAddress);
     }
-    forth.memory.insert(addr, val);
+    forth.memory[addr] = val;
     Ok(())
 }
 
 /// `@ (addr -- n)`
 /// Get the value of the variable at addr.
 fn fetch(forth: &mut Forth) -> Result<(), Error> {
-    let addr = usize::from(forth.pop()?);
+    let addr = forth.pop()?.to_addr();
     let val = forth.memory.get(addr).ok_or(InvalidAddress)?;
     forth.push(*val);
+    Ok(())
+}
+
+/// `.m (--)`
+/// Print the memory and it's size.
+fn print_memory(forth: &mut Forth) -> Result<(), Error> {
+    let show_max = 10;
+    let memory = forth
+        .memory
+        .iter()
+        .take(show_max)
+        .map(|x| x.to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+    let n = forth.memory.len();
+    let dots = if n > show_max { "..." } else { "" };
+    print!(" <{}> {}{}", n, memory, dots);
     Ok(())
 }
 
@@ -497,6 +525,23 @@ pub fn from_return(forth: &mut Forth) -> Result<(), Error> {
 pub fn copy_from_return(forth: &mut Forth) -> Result<(), Error> {
     let value = forth.return_stack.last().ok_or(StackUnderflow)?;
     forth.push(*value);
+    Ok(())
+}
+
+/// `.r (--)`
+/// Print the stack and it's size.
+fn print_return(forth: &mut Forth) -> Result<(), Error> {
+    let show_max = 10;
+    let stack = forth
+        .return_stack
+        .iter()
+        .take(show_max)
+        .map(|x| x.to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+    let n = forth.data_stack.len();
+    let dots = if n > show_max { "..." } else { "" };
+    print!(" <{}> {}{}", n, stack, dots);
     Ok(())
 }
 

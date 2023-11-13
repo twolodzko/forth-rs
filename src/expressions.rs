@@ -102,7 +102,7 @@ impl Expr {
             NewVariable(name) => {
                 forth.memory.push(Int(0));
                 let addr = forth.memory.len() - 1;
-                forth.define_word(name, Constant(addr.into()))?;
+                forth.define_word(name, Constant(Int::from_addr(addr)))?;
                 Ok(())
             }
             Include(path) => forth.eval_file(path),
