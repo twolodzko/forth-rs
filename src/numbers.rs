@@ -8,6 +8,9 @@ use std::{
 #[derive(Clone, Copy, Debug)]
 pub struct Int(pub i32);
 
+pub const TRUE: i32 = -1;
+pub const FALSE: i32 = 0;
+
 impl Int {
     #[inline]
     pub fn is_zero(&self) -> bool {
@@ -16,7 +19,7 @@ impl Int {
 
     #[inline]
     pub fn is_true(&self) -> bool {
-        self.0 != 0
+        self.0 != FALSE
     }
 
     #[inline]
@@ -65,7 +68,7 @@ impl Not for Int {
 
     #[inline]
     fn not(self) -> Self::Output {
-        Int(if self.is_true() { 0 } else { -1 })
+        Int(if self.is_true() { FALSE } else { TRUE })
     }
 }
 
@@ -86,7 +89,7 @@ impl PartialOrd for Int {
 impl From<bool> for Int {
     #[inline]
     fn from(value: bool) -> Self {
-        Int(if value { -1 } else { 0 })
+        Int(if value { TRUE } else { FALSE })
     }
 }
 

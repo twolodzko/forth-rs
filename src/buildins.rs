@@ -6,13 +6,13 @@ use crate::{
     },
     expressions::Expr::{self, Callable, Dummy, Value},
     forth::Forth,
-    numbers::Int,
+    numbers::{Int, FALSE, TRUE},
 };
 
 const BUILDINS: &[(&str, Expr)] = &[
     // logic
-    ("true", Value(Int(-1))),
-    ("false", Value(Int(0))),
+    ("true", Value(Int(TRUE))),
+    ("false", Value(Int(FALSE))),
     ("not", Callable(not)),
     ("and", Callable(and)),
     ("or", Callable(or)),
