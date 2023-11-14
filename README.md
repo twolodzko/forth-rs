@@ -1,11 +1,14 @@
 # Forth\.rs
 
-Forth\.rs reads as *fortress* /fôr′trĭs/. It is a minimal-ish implementation of the [Forth] language interpreter.
+Forth\.rs reads as *fortress* /fôr′trĭs/. It is a minimal-ish implementation of the [Forth] language interpreter in Rust.
 Forth is a simple programming language coming from the time when code was written in uppercase (early 70').
 For me, the biggest help in learning Forth was the [*Starting Forth*] book by Leo Brodie and the marvelous
 [*Simple Forth*] tutorial by Leo Wong, both are freely available online. From other resources, there is also the
 [standard] which is rather dry, nice [*Easy Forth*] tutorial, and [*Learn X in Y minutes*] for Forth.
-[*An Introduction to Forth using StackFlow*] tutorial can also be helpful.
+[*An Introduction to Forth using StackFlow*] tutorial can also be helpful. Since there is no single Forth, but
+multiple implementations that have changed over time and vary in detail, the internals of the language were not always
+clear from the available resources. When in doubt, I used [Gforth] as a reference implementation and backward-engineered
+how it behaves.
 
 ## Reverse Polish notation
 
@@ -40,8 +43,7 @@ implementation, the stack is just Rust's [`std::vec::Vec`] array.
 But how does Forth know what to do with `1` or `+`? For its interpreter, both are *words*. The words are separated 
 by whitespaces. In most cases, the work of the parser is trivial, as it just needs to read whatever input until
 the whitespace as a word. After reading it, the word is interpreted. First, the interpreter tries searching for it in
-the *dictionary* which maps words to things like functions or constants. In this implementation, the dictionary is
-Rust's [`std::collections::HashMap`] hash map.
+the *dictionary* which maps words to things like functions or constants.
 
 * If it finds the word in the dictionary, its definition is retrieved and executed. For example, it retrieves
 a function and the function is executed, or it retrieves a constant and its value is pushed to the stack.
@@ -51,6 +53,8 @@ a function and the function is executed, or it retrieves a constant and its valu
 What about other data types than numbers? There are no other data types. Forth only uses integers, take it or leave it.
 To be fair, the language was evolving and gradually introducing new types (like floats or strings), but this
 implementation follows the classic, hardcore path. Zero is treated as binary false and every other value as binary true.
+
+In this implementation, the dictionary is Rust's [`std::collections::HashMap`] hash map.
 
 ## Beyond words
 
@@ -68,22 +72,23 @@ the variable name did not exist before creating it, it couldn't precede the `var
 
 ## Beyond the stack and the dictionary
 
-I mentioned above the `variable` keyword which "reserves memory". Other than the stack and dictionary, Forth also has
+I mentioned above the `variable` keyword "reserves memory". Other than the stack and dictionary, Forth also has
 long-term *memory*. The classical Forth implementations reserved space in the computer memory, but in my
 implementation, the memory is treated as Rust's [`std::vec::Vec`] array. New values can be pushed to the memory,
 the old values can be retrieved or changed. To operate on the memory, we need to know the memory address of the 
 values (array index). For example, `variable foo` creates the variable `foo` and reserves some location in the memory
-for its content. Calling the `foo` word would return the memory location. We could use `!` word to push some value
+for its content. Calling the `foo` word would return the memory location. We use `!` word to push a value
 to the location `42 foo !`, or `@` to retrieve the content of the location `foo @` and push it into the stack.
 
 There is also the *return stack*, which can be used as a secondary, temporary memory. Because we have two, the regular
-stack formally is called the *data stack*. It can be manipulated using the words `>r` (move the value from the stack to
-the return stack), `r>` (move the value from the return stack to the data stack), `r@` (copy the value from the return
-stack to the data stack). Forth has a special use for the return stack in counted loops. The loop `10 0 do ... loop`
-would iterate from 0 to 10 each time executing the body `...`. The current loop index is pushed to the return stack.
-The special keyword `i` copies the index from the return stack to the data stack. For nested loops, we could also use
-`j` to copy the index of the outer loop to the stack. Unfortunately, no syntax shortcuts are available for additional
-levels of nesting. The [*Simple Forth*] tutorial mentions the following [rules for using the return stack]
+stack formally is called the *data stack*. The return stack can be manipulated using the words `>r` (move the value from
+the stack to the return stack), `r>` (move the value from the return stack to the data stack), `r@` (copy the value from
+the return stack to the data stack). Forth has a special use for the return stack in counted loops.
+The loop `10 0 do ... loop` would iterate from 0 to 10 each time executing the body `...`. The current loop index is
+pushed to the return stack. The special keyword `i` copies the index from the return stack to the data stack. For nested
+loops, we could also use `j` to copy the index of the outer loop to the stack. Unfortunately, no syntax shortcuts are
+available for additional levels of nesting. The [*Simple Forth*] tutorial mentions the following
+[rules for using the return stack]
 
 > Your Forth almost certainly uses the return stack for its own purposes, so your use of the return stack must follow certain rules:
 > 1. Data put on the return stack must be taken back within the *same word*.
@@ -110,3 +115,4 @@ If you break the rules, unexpected things may happen, but they are not enforced 
  [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
  [rules for using the return stack]: http://www.murphywong.net/hello/simple.htm#L20
  [`std::collections::HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
+ [Gforth]: https://www.gnu.org/software/gforth/
