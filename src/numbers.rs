@@ -2,20 +2,13 @@ use std::{
     cmp::{PartialEq, PartialOrd},
     fmt::Display,
     ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Sub},
+    str::FromStr,
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct Int(pub i32);
 
 impl Int {
-    #[inline]
-    pub fn parse(string: &str) -> Option<Self> {
-        match string.parse::<i32>() {
-            Err(_) => None,
-            Ok(val) => Some(Int(val)),
-        }
-    }
-
     #[inline]
     pub fn is_zero(&self) -> bool {
         self.0 == 0
@@ -32,50 +25,31 @@ impl Int {
     }
 }
 
-impl Add for Int {
-    type Output = Int;
+/// Generate operation trait (`std::ops`) implementation.
+macro_rules! impl_op {
+    ( $trait:ty, $op:tt ) => {
+        impl_op!($trait, $op, $op);
+    };
+    ( $trait:ty, $op_name:tt, $op_used:tt ) => {
+        impl $trait for Int {
+            type Output = Int;
 
-    #[inline]
-    fn add(self, rhs: Self) -> Self::Output {
-        Int(self.0.saturating_add(rhs.0))
-    }
+            #[inline]
+            fn $op_name(self, rhs: Self) -> Self::Output {
+                Int(self.0.$op_used(rhs.0))
+            }
+        }
+    };
 }
 
-impl Sub for Int {
-    type Output = Int;
-
-    #[inline]
-    fn sub(self, rhs: Self) -> Self::Output {
-        Int(self.0.saturating_sub(rhs.0))
-    }
-}
-
-impl Mul for Int {
-    type Output = Int;
-
-    #[inline]
-    fn mul(self, rhs: Self) -> Self::Output {
-        Int(self.0.saturating_mul(rhs.0))
-    }
-}
-
-impl Div for Int {
-    type Output = Int;
-
-    #[inline]
-    fn div(self, rhs: Self) -> Self::Output {
-        Int(self.0.saturating_div(rhs.0))
-    }
-}
-
-impl Rem for Int {
-    type Output = Int;
-
-    #[inline]
-    fn rem(self, rhs: Self) -> Self::Output {
-        Int(self.0 % rhs.0)
-    }
-}
+impl_op!(Add, add, saturating_add);
+impl_op!(Sub, sub, saturating_sub);
+impl_op!(Mul, mul, saturating_mul);
+impl_op!(Div, div, saturating_div);
+impl_op!(Rem, rem);
+impl_op!(BitAnd, bitand);
+impl_op!(BitOr, bitor);
+impl_op!(BitXor, bitxor);
 
 impl Neg for Int {
     type Output = Int;
@@ -83,41 +57,6 @@ impl Neg for Int {
     #[inline]
     fn neg(self) -> Self::Output {
         Int(-self.0)
-    }
-}
-
-impl BitAnd for Int {
-    type Output = Int;
-
-    #[inline]
-    fn bitand(self, rhs: Self) -> Self::Output {
-        if self.is_true() {
-            rhs
-        } else {
-            self
-        }
-    }
-}
-
-impl BitOr for Int {
-    type Output = Int;
-
-    #[inline]
-    fn bitor(self, rhs: Self) -> Self::Output {
-        if self.is_true() {
-            self
-        } else {
-            rhs
-        }
-    }
-}
-
-impl BitXor for Int {
-    type Output = Int;
-
-    #[inline]
-    fn bitxor(self, rhs: Self) -> Self::Output {
-        (self.is_true() ^ rhs.is_true()).into()
     }
 }
 
@@ -189,6 +128,15 @@ impl From<Int> for char {
             }
         }
         '�'
+    }
+}
+
+impl FromStr for Int {
+    type Err = std::num::ParseIntError;
+
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Int(s.parse::<i32>()?))
     }
 }
 

@@ -20,6 +20,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("<>", Callable(ne)),
     ("<", Callable(lt)),
     (">", Callable(gt)),
+    ("0=", Callable(is_zero)),
     // math
     ("+", Callable(add)),
     ("-", Callable(sub)),
@@ -270,6 +271,16 @@ fn lt(forth: &mut Forth) -> Result<(), Error> {
 fn gt(forth: &mut Forth) -> Result<(), Error> {
     let (a, b) = forth.pop2()?;
     forth.push((a > b).into());
+    Ok(())
+}
+
+/// `0= (n -- flag)`
+fn is_zero(forth: &mut Forth) -> Result<(), Error> {
+    if forth.data_stack.is_empty() {
+        return Err(StackUnderflow);
+    }
+    let n = forth.data_stack.len();
+    forth.data_stack[n - 1] = forth.data_stack[n - 1].is_zero().into();
     Ok(())
 }
 

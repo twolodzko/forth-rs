@@ -39,6 +39,8 @@ use test_case::test_case;
 #[test_case(">", &[2, 1], &[-1]; "greater is true")]
 #[test_case(">", &[1, 2], &[0]; "greater is false")]
 #[test_case(">", &[1, 1], &[0]; "greater for equal")]
+#[test_case("0=", &[0], &[-1]; "is zero for zero")]
+#[test_case("0=", &[5], &[0]; "is zero for non-zero")]
 #[test_case("not", &[0], &[-1]; "not true")]
 #[test_case("not", &[-1], &[0]; "not false")]
 #[test_case("and", &[0, 0], &[0]; "and for false false")]

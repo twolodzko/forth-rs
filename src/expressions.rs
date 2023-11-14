@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use crate::{
     errors::Error::{self, CompileTimeWord, Exit, Leave, Recurse, UnknownWord},
@@ -55,7 +55,7 @@ impl Expr {
             Word(word) => match forth.get_word(word) {
                 Some(compiled) => compiled.execute(forth),
                 None => {
-                    if let Some(num) = Int::parse(word) {
+                    if let Ok(num) = Int::from_str(word) {
                         forth.push(num);
                         Ok(())
                     } else {
