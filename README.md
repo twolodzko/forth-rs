@@ -109,7 +109,7 @@ If you break the rules, unexpected things may happen, but they are not enforced 
 * Forth internally distinguishes between signed and unsigned integers, I didn't feel the need for it, so there is no
   notion of unsigned integers and the related methods.
 * The word `cells` is used in Forth to translate numbers to memory units. Since in this implementation, the memory is
-  just an array, indexed using integers, it would be an identify function, so it was not implemented.
+  just an array, indexed using integers, `cells` would be an identify function and it was not implemented.
 * Only a subset of features is implemented. For example, there are no utilities for string manipulations.
 
 
