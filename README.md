@@ -33,11 +33,11 @@ Forth is a [stack-based] language, which means that it uses the [*stack*] for pa
  5. `+` is an operation that retrieves `1` and `6` from the stack and adds them, pushing the result to the stack.
 
 One important thing to notice is that the operators "communicate" by passing values through the shared stack. In this
-implementation, the stack is just Rust's [`std::vec::Vec`] array of integers.
+implementation, the stack is just Rust's [`std::vec::Vec`] array.
 
 ## Words
 
-But how does Forth know what to do with `1` or `+`? For it's interpreter, both are *words*. The words are separated 
+But how does Forth know what to do with `1` or `+`? For its interpreter, both are *words*. The words are separated 
 by whitespaces. In most cases, the work of the parser is trivial, as it just needs to read whatever input until
 the whitespace as a word. After reading it, the word is interpreted. First, the interpreter tries searching for it in
 the *dictionary* which maps words to things like functions or constants. In this implementation, the dictionary is
