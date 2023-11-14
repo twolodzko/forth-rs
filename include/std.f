@@ -24,10 +24,8 @@
 : space  ( -- )  32 emit ;
 : spaces  ( n -- )  0 do space loop ;
 
-: not  ( n -- flag ) 0= ;
 : 2+  ( n1 -- n2 )  2 + ;
 : 2-  ( n1 -- n2 )  2 + ;
-: 0=  ( n1 -- flag )  0 = ;
 : 0<  ( n1 -- flag )  0 < ;
 : >=  ( n1 n2 -- flag )  < not ;
 : <=  ( n1 n2 -- flag )  > not ;

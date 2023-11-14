@@ -1,6 +1,13 @@
 use forth_rs::Forth;
 use std::env;
 
+macro_rules! die {
+    ( $msg:expr ) => {{
+        eprintln!("error: {:?}", $msg);
+        std::process::exit(1);
+    }};
+}
+
 #[cfg(feature = "repl")]
 fn repl(forth: &mut Forth) {
     use rustyline::{error::ReadlineError, DefaultEditor};
@@ -20,10 +27,7 @@ fn repl(forth: &mut Forth) {
             Err(ReadlineError::Interrupted | ReadlineError::Eof) => {
                 break;
             }
-            Err(err) => {
-                println!("error: {:?}", err);
-                break;
-            }
+            Err(err) => die!(err),
         }
     }
 }
@@ -51,8 +55,8 @@ fn main() {
     }
 
     for path in &args[1..] {
-        if let Err(msg) = forth.eval_file(path) {
-            panic!("{}", msg);
+        if let Err(err) = forth.eval_file(path) {
+            die!(err);
         }
     }
 }

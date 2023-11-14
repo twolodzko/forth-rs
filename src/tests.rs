@@ -105,7 +105,7 @@ fn eval_string(word: &str, init_stack: &[i32], expected_stack: &[i32]) {
 #[test_case(">"; "greater")]
 #[test_case("1+"; "add one")]
 #[test_case("1-"; "sub one")]
-#[test_case("not"; "not")]
+#[test_case("0="; "equal to zero")]
 #[test_case("and"; "and")]
 #[test_case("or"; "or")]
 #[test_case("xor"; "xor")]

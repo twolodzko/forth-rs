@@ -13,10 +13,10 @@ const BUILDINS: &[(&str, Expr)] = &[
     // logic
     ("true", Value(Int(TRUE))),
     ("false", Value(Int(FALSE))),
-    ("not", Callable(not)),
     ("and", Callable(and)),
     ("or", Callable(or)),
     ("xor", Callable(xor)),
+    ("not", Callable(is_zero)),
     // comparisons
     ("=", Callable(eq)),
     ("<>", Callable(ne)),
@@ -285,16 +285,6 @@ fn is_zero(forth: &mut Forth) -> Result<(), Error> {
     }
     let n = forth.data_stack.len();
     forth.data_stack[n - 1] = forth.data_stack[n - 1].is_zero().into();
-    Ok(())
-}
-
-/// `not (n -- n)`
-fn not(forth: &mut Forth) -> Result<(), Error> {
-    if forth.data_stack.is_empty() {
-        return Err(StackUnderflow);
-    }
-    let n = forth.data_stack.len();
-    forth.data_stack[n - 1] = !forth.data_stack[n - 1];
     Ok(())
 }
 
