@@ -37,8 +37,10 @@ pub enum Expr {
     NewConstant(String),
     /// Push the constant to the stack.
     Constant(Int),
-    /// Create a new constant holding the memory address of the variable.
+    /// Allocate memory and create a new constant holding the current memory address.
     NewVariable(String),
+    /// Create a new constant holding the current memory address.
+    NewCreate(String),
     /// Read Forth script from the path.
     Include(String),
     /// Display the content of the word.
@@ -120,6 +122,11 @@ impl Expr {
                 forth.define_word(name, Constant(Int::from(addr)))?;
                 Ok(())
             }
+            NewCreate(name) => {
+                let addr = forth.memory.len();
+                forth.define_word(name, Constant(Int::from(addr)))?;
+                Ok(())
+            }
             Include(path) => forth.eval_file(path),
             Print(string) => {
                 print!("{}", string);
@@ -182,6 +189,7 @@ impl Display for Expr {
             NewConstant(name) => format!("constant {}", name),
             Constant(val) => format!("{}", val),
             NewVariable(name) => format!("variable {}", name),
+            NewCreate(name) => format!("create {}", name),
             Include(path) => format!("include {}", path),
             See(word) => format!("see {}", word),
             Dummy => unreachable!(),

@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::{
     errors::Error::{
         self, DivisionByZero, Exit, InvalidAddress, Leave, Quit, Recurse, StackUnderflow,
@@ -55,6 +57,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     // constants, variables, arrays, and memory
     ("constant", Dummy),
     ("variable", Dummy),
+    ("create", Dummy),
     ("!", Callable(set)),
     ("@", Callable(fetch)),
     ("dump", Callable(dump)),
@@ -449,10 +452,11 @@ fn words(forth: &mut Forth) -> Result<(), Error> {
 fn set(forth: &mut Forth) -> Result<(), Error> {
     let (val, addr) = forth.pop2()?;
     let addr = usize::from(addr);
-    if addr >= forth.memory.len() {
-        return Err(InvalidAddress);
+    match addr.cmp(&forth.memory.len()) {
+        Ordering::Greater => return Err(InvalidAddress),
+        Ordering::Equal => forth.memory.push(val),
+        Ordering::Less => forth.memory[addr] = val,
     }
-    forth.memory[addr] = val;
     Ok(())
 }
 

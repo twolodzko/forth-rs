@@ -1,9 +1,6 @@
 use crate::{
     errors::Error::{self, ParsingError},
-    expressions::Expr::{
-        self, Begin, IfElseThen, Include, Loop, NewConstant, NewFunction, NewVariable, Print, See,
-        Word,
-    },
+    expressions::Expr::{self, *},
 };
 use std::{iter::Peekable, str::Chars};
 
@@ -212,6 +209,14 @@ impl<'a> Iterator for Parser<'a> {
                     Some(Err(ParsingError("variable needs a name".into())))
                 } else {
                     Some(Ok(NewVariable(name)))
+                }
+            }
+            "create" => {
+                let name = self.read_word();
+                if name.is_empty() {
+                    Some(Err(ParsingError("variable needs a name".into())))
+                } else {
+                    Some(Ok(NewCreate(name)))
                 }
             }
             "constant" => {

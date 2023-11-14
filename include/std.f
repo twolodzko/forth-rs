@@ -34,6 +34,3 @@
 
 \ Conditionally exit.
 : ?exit  ( x -- )  if exit then ;
-
-\ Alias
-: create variable ;
