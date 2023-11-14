@@ -212,7 +212,8 @@ impl Display for Expr {
             NewValue(name) => format!("value {}", name),
             Include(path) => format!("include {}", path),
             See(word) => format!("see {}", word),
-            Dummy | ToValue(_) => unreachable!(),
+            ToValue(name) => format!("to {}", name),
+            Dummy => unreachable!(),
         };
         write!(f, "{}", string)
     }

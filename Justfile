@@ -1,6 +1,7 @@
 test:
     cargo clippy
     cargo test
+    cargo run -- examples/hello.f
 
 coverage:
     cargo tarpaulin --out Html
