@@ -1,8 +1,10 @@
 use forth_rs::Forth;
-use rustyline::{error::ReadlineError, DefaultEditor};
 use std::env;
 
+#[cfg(feature = "repl")]
 fn repl(forth: &mut Forth) {
+    use rustyline::{error::ReadlineError, DefaultEditor};
+
     println!("Press ^C to exit.\n");
 
     let mut rl = DefaultEditor::new().unwrap();
@@ -26,25 +28,31 @@ fn repl(forth: &mut Forth) {
     }
 }
 
+fn print_help(args: Vec<String>) {
+    println!("Usage: {} [FILE]...", args[0]);
+    #[cfg(feature = "repl")]
+    println!("\n\nIf no files are given, opens REPL.");
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     let mut forth = Forth::new(1024);
 
+    #[cfg(feature = "repl")]
     if args.len() < 2 {
         repl(&mut forth);
         return;
     }
 
-    if &args[1] == "-h" || &args[1] == "--help" {
-        println!(
-            "Usage: {} [FILE]...\n\nIf no files are given, opens REPL.",
-            args[0]
-        );
+    if args.len() < 2 || &args[1] == "-h" || &args[1] == "--help" {
+        print_help(args);
         return;
     }
 
-    if let Err(msg) = forth.eval_file(&args[1]) {
-        panic!("{}", msg);
+    for path in &args[1..] {
+        if let Err(msg) = forth.eval_file(path) {
+            panic!("{}", msg);
+        }
     }
 }
