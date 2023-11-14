@@ -5,6 +5,7 @@ Forth is a simple programming language coming from the time when code was writte
 For me, the biggest help in learning Forth was the [*Starting Forth*] book by Leo Brodie and the marvelous
 [*Simple Forth*] tutorial by Leo Wong, both are freely available online. From other resources, there is also the
 [standard] which is rather dry, nice [*Easy Forth*] tutorial, and [*Learn X in Y minutes*] for Forth.
+[*An Introduction to Forth using StackFlow*] tutorial can also be helpful.
 
 ## Reverse Polish notation
 
@@ -23,11 +24,11 @@ and write the formula above as `3 2 * 1 +`.
 Forth is a [stack-based] language, which means that it uses the [*stack*] for passing the parameters. We can split the
 `3 2 * 1 +` arithmetic operation, to the following steps
 
- 0. We start processing the expression `3 2 * 1 +` with the empty stack.
+ 0. We start processing the expression `3 2 * 1 +` with the empty stack (if it already contained something, it doesn't matter here).
  1. The number `3` is pushed to the stack and we continue processing `2 * 1 +`.
  2. The number `2` is pushed to the stack and we continue processing `* 1 +`.
- 3. `*` is an operation that takes two arguments, so it first retrieves `2` from the top of the stack, and then `3`. 
- It multiplies the two arguments and pushes the result `6` to the stack. Next, it continues evaluating `1 +`.
+ 3. `*` is an operation that takes two arguments. It first retrieves `2` from the top of the stack, and then retrieves `3`. 
+ It multiplies the two arguments and pushes the result `6` back to the stack. Next, it continues evaluating `1 +`.
  4. The number `1` is pushed to the stack and we continue evaluating `+`.
  5. `+` is an operation that retrieves `1` and `6` from the stack and adds them, pushing the result to the stack.
 
@@ -98,6 +99,7 @@ If you break the rules, unexpected things may happen, but they are not enforced 
  [*Simple Forth*]: http://www.murphywong.net/hello/simple.htm
  [standard]: https://forth-standard.org
  [*Easy Forth*]: https://skilldrick.github.io/easyforth/
+ [*An Introduction to Forth using StackFlow*]: http://www.forth.org/forth_intro/stackflo.htm
  [*Learn X in Y minutes*]: https://learnxinyminutes.com/docs/forth/
  [most popular notation]: https://en.wikipedia.org/wiki/Infix_notation
  [order or operations]: https://en.wikipedia.org/wiki/Order_of_operations
