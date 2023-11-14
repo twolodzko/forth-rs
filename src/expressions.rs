@@ -143,7 +143,7 @@ impl Expr {
                         Ok(())
                     }
                     Some(_) => Err(InvalidName(name.into())),
-                    None => return Err(UnknownWord(name.into())),
+                    None => Err(UnknownWord(name.into())),
                 }
             }
             Include(path) => forth.eval_file(path),
