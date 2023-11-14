@@ -5,7 +5,7 @@ use std::{
     str::FromStr,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Int(pub i32);
 
 pub const TRUE: i32 = -1;
@@ -69,20 +69,6 @@ impl Not for Int {
     #[inline]
     fn not(self) -> Self::Output {
         Int(if self.is_true() { FALSE } else { TRUE })
-    }
-}
-
-impl PartialEq for Int {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.0.eq(&other.0)
-    }
-}
-
-impl PartialOrd for Int {
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.0.partial_cmp(&other.0)
     }
 }
 
