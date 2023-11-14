@@ -58,7 +58,7 @@ In this implementation, the dictionary is Rust's [`std::collections::HashMap`] h
 
 ## Beyond words
 
-Most of the time, the life of the interpreter is simple: read a word, evaluate it, and proceed to next word. 
+Most of the time, the life of the interpreter is simple: read a word, evaluate it, and proceed to the next word. 
 Unfortunately, not everything can be expressed like this.
 
 The simplest example is comments, where we start a comment with the `(` word and want the interpreter to ignore
@@ -90,13 +90,27 @@ loops, we could also use `j` to copy the index of the outer loop to the stack. U
 available for additional levels of nesting. The [*Simple Forth*] tutorial mentions the following
 [rules for using the return stack]
 
-> Your Forth almost certainly uses the return stack for its own purposes, so your use of the return stack must follow certain rules:
+> Your Forth almost certainly uses the return stack for its own purposes, so your use of the return stack must follow
+> certain rules:
 > 1. Data put on the return stack must be taken back within the *same word*.
 > 2. Data put on the return stack outside a `?DO (DO) ... LOOP (+LOOP)` cannot be accessed within the loop.
 > 3. Data put on the return stack within a `?DO (DO) ... LOOP (+LOOP)` must be taken back before leaving the loop.
 > 4. Data cannot be on the return stack when executing `I` or `J` in a loop.
 
 If you break the rules, unexpected things may happen, but they are not enforced anyhow.
+
+## Inconsistencies with Forth
+
+* Forth used linked lists, memory addresses, etc. All of them are replaced with modern, Rust data structures, as
+  mentioned above.
+* Forth distinguishes between words that can be interpreted and compile-time words. For example, a loop can be only
+  a part of a function and cannot be interpreted directly. Nothing prohibited me from having interpreted loops,
+  so they work out-of-the-box in the terminal (REPL).
+* Forth internally distinguishes between signed and unsigned integers, I didn't feel the need for it, so there is no
+  notion of unsigned integers and the related methods.
+* The word `cells` is used in Forth to translate numbers to memory units. Since in this implementation, the memory is
+  just an array, indexed using integers, it would be an identify function, so it was not implemented.
+* Only a subset of features is implemented. For example, there are no utilities for string manipulations.
 
 
  [Forth]: https://en.wikipedia.org/wiki/Forth_(programming_language)
