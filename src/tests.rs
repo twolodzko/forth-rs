@@ -181,17 +181,17 @@ fn errors(code: &str, err: Error) {
 
 #[test]
 fn constants() {
-    use crate::expressions::Expr::Constant;
+    use crate::expressions::Expr::Value;
 
     let mut forth = Forth::new(10);
 
     assert!(forth.get_word("x").is_none());
     assert!(forth.eval_string("42 constant x").is_ok());
-    assert_eq!(Some(Constant(Int(42))), forth.get_word("x"));
+    assert_eq!(Some(Value(Int(42))), forth.get_word("x"));
 
     assert!(forth.get_word("y").is_none());
     assert!(forth.eval_string("123 constant y").is_ok());
-    assert_eq!(Some(Constant(Int(123))), forth.get_word("y"));
+    assert_eq!(Some(Value(Int(123))), forth.get_word("y"));
 
     assert_eq!(
         Err(Error::Redefined("x".into())),

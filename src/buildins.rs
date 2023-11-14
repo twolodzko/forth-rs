@@ -4,15 +4,15 @@ use crate::{
     errors::Error::{
         self, DivisionByZero, Exit, InvalidAddress, Leave, Quit, Recurse, StackUnderflow,
     },
-    expressions::Expr::{self, Callable, Constant, Dummy},
+    expressions::Expr::{self, Callable, Dummy, Value},
     forth::Forth,
     numbers::Int,
 };
 
 const BUILDINS: &[(&str, Expr)] = &[
     // logic
-    ("true", Constant(Int(-1))),
-    ("false", Constant(Int(0))),
+    ("true", Value(Int(-1))),
+    ("false", Value(Int(0))),
     ("not", Callable(not)),
     ("and", Callable(and)),
     ("or", Callable(or)),
@@ -77,6 +77,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     (".(", Dummy),
     (".\"", Dummy),
     ("include", Dummy),
+    ("to", Dummy),
     // looping
     ("while", Callable(while_cond)),
     ("until", Callable(until)),

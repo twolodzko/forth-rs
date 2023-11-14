@@ -1,7 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
 use crate::{
-    errors::Error::{self, CompileTimeWord, Exit, Leave, Recurse, UnknownWord},
+    errors::Error::{self, CompileTimeWord, Exit, InvalidName, Leave, Recurse, UnknownWord},
     forth::Forth,
     numbers::Int,
 };
@@ -35,12 +35,16 @@ pub enum Expr {
     Loop(Vec<Expr>),
     /// Create a new constant.
     NewConstant(String),
-    /// Push the constant to the stack.
-    Constant(Int),
+    /// Push the value to the stack.
+    Value(Int),
     /// Allocate memory and create a new constant holding the current memory address.
     NewVariable(String),
     /// Create a new constant holding the current memory address.
     NewCreate(String),
+    /// Create a new value.
+    NewValue(String),
+    /// Update the value.
+    ToValue(String),
     /// Read Forth script from the path.
     Include(String),
     /// Display the content of the word.
@@ -110,22 +114,37 @@ impl Expr {
             }
             NewConstant(name) => {
                 let value = forth.pop()?;
-                forth.define_word(name, Constant(value))
+                forth.define_word(name, Value(value))
             }
-            Constant(val) => {
+            Value(val) => {
                 forth.push(*val);
                 Ok(())
             }
             NewVariable(name) => {
                 forth.memory.push(Int(0));
                 let addr = forth.memory.len() - 1;
-                forth.define_word(name, Constant(Int::from(addr)))?;
+                forth.define_word(name, Value(Int::from(addr)))?;
                 Ok(())
             }
             NewCreate(name) => {
                 let addr = forth.memory.len();
-                forth.define_word(name, Constant(Int::from(addr)))?;
+                forth.define_word(name, Value(Int::from(addr)))?;
                 Ok(())
+            }
+            NewValue(name) => {
+                forth.define_word(name, Value(Int(0)))?;
+                Ok(())
+            }
+            ToValue(name) => {
+                let value = forth.pop()?;
+                match forth.dictionary.get_mut(name) {
+                    Some(Value(val)) => {
+                        *val = value;
+                        Ok(())
+                    }
+                    Some(_) => Err(InvalidName(name.into())),
+                    None => return Err(UnknownWord(name.into())),
+                }
             }
             Include(path) => forth.eval_file(path),
             Print(string) => {
@@ -187,12 +206,13 @@ impl Display for Expr {
             Begin(body) => format!("begin {}", vec_to_string(body)),
             Loop(body) => format!("do {} loop", vec_to_string(body)),
             NewConstant(name) => format!("constant {}", name),
-            Constant(val) => format!("{}", val),
+            Value(val) => format!("{}", val),
             NewVariable(name) => format!("variable {}", name),
             NewCreate(name) => format!("create {}", name),
+            NewValue(name) => format!("value {}", name),
             Include(path) => format!("include {}", path),
             See(word) => format!("see {}", word),
-            Dummy => unreachable!(),
+            Dummy | ToValue(_) => unreachable!(),
         };
         write!(f, "{}", string)
     }

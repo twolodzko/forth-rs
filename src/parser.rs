@@ -227,6 +227,22 @@ impl<'a> Iterator for Parser<'a> {
                     Some(Ok(NewConstant(name)))
                 }
             }
+            "value" => {
+                let name = self.read_word();
+                if name.is_empty() {
+                    Some(Err(ParsingError("value needs a name".into())))
+                } else {
+                    Some(Ok(NewValue(name)))
+                }
+            }
+            "to" => {
+                let name = self.read_word();
+                if name.is_empty() {
+                    Some(Err(ParsingError("no name for value".into())))
+                } else {
+                    Some(Ok(ToValue(name)))
+                }
+            }
             "if" => Some(self.read_iet()),
             "include" => {
                 let path = self.read_word();
