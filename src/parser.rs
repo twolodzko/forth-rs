@@ -1,5 +1,5 @@
 use crate::{
-    errors::Error::{self, ParsingError},
+    errors::Error::{self, MissingArgument, ParsingError},
     expressions::Expr::{self, *},
 };
 use std::{iter::Peekable, str::Chars};
@@ -164,6 +164,17 @@ impl<'a> Parser<'a> {
     }
 }
 
+macro_rules! single_arg {
+    ( $self:ident, $type:expr ) => {{
+        let word = $self.read_word();
+        if word.is_empty() {
+            Some(Err(MissingArgument))
+        } else {
+            Some(Ok($type(word)))
+        }
+    }};
+}
+
 impl<'a> Iterator for Parser<'a> {
     type Item = Result<Expr, Error>;
 
@@ -203,66 +214,31 @@ impl<'a> Iterator for Parser<'a> {
             },
             // special forms
             ":" => Some(self.read_function()),
-            "variable" => {
-                let name = self.read_word();
-                if name.is_empty() {
-                    Some(Err(ParsingError("variable needs a name".into())))
-                } else {
-                    Some(Ok(NewVariable(name)))
-                }
-            }
-            "create" => {
-                let name = self.read_word();
-                if name.is_empty() {
-                    Some(Err(ParsingError("variable needs a name".into())))
-                } else {
-                    Some(Ok(NewCreate(name)))
-                }
-            }
-            "constant" => {
-                let name = self.read_word();
-                if name.is_empty() {
-                    Some(Err(ParsingError("constant needs a name".into())))
-                } else {
-                    Some(Ok(NewConstant(name)))
-                }
-            }
-            "value" => {
-                let name = self.read_word();
-                if name.is_empty() {
-                    Some(Err(ParsingError("value needs a name".into())))
-                } else {
-                    Some(Ok(NewValue(name)))
-                }
-            }
-            "to" => {
-                let name = self.read_word();
-                if name.is_empty() {
-                    Some(Err(ParsingError("no name for value".into())))
-                } else {
-                    Some(Ok(ToValue(name)))
-                }
-            }
             "if" => Some(self.read_iet()),
-            "include" => {
-                let path = self.read_word();
-                if path.is_empty() {
-                    Some(Err(ParsingError("missing the path argument".into())))
-                } else {
-                    Some(Ok(Include(path)))
-                }
-            }
-            "see" => {
-                let word = self.read_word();
-                if word.is_empty() {
-                    Some(Err(ParsingError("argument missing".into())))
-                } else {
-                    Some(Ok(See(word)))
-                }
-            }
-            // loops
             "begin" => Some(self.read_begin()),
             "do" => Some(self.read_loop()),
+            // words followed by a single argument
+            "variable" => {
+                single_arg!(self, NewVariable)
+            }
+            "create" => {
+                single_arg!(self, NewCreate)
+            }
+            "constant" => {
+                single_arg!(self, NewConstant)
+            }
+            "value" => {
+                single_arg!(self, NewValue)
+            }
+            "to" => {
+                single_arg!(self, ToValue)
+            }
+            "include" => {
+                single_arg!(self, Include)
+            }
+            "see" => {
+                single_arg!(self, See)
+            }
             // other words
             word => Some(Ok(Word(word.into()))),
         }
