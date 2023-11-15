@@ -134,7 +134,8 @@ impl Expr {
                 Ok(())
             }
             NewValue(name) => {
-                forth.define_word(name, Value(Int(0)))?;
+                let value = forth.stack_pop()?;
+                forth.define_word(name, Value(value))?;
                 Ok(())
             }
             ToValue(name) => {

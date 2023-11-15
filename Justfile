@@ -9,11 +9,26 @@ unit-test:
 integration-test:
     cargo run -- \
         include/std.f \
-        examples/* \
+        examples/testsuite.f >/dev/null
+    cargo run -- \
+        include/std.f \
+        examples/chars.f \
+        examples/fact.f \
+        examples/fizzbuzz.f \
+        examples/hello.f \
+        examples/integers.f \
+        examples/leap.f \
+        examples/pascal.f \
+        examples/stars.f \
         >/dev/null
 
 coverage:
     cargo tarpaulin --out Html
+
+benchmark:
+    hyperfine -N -r 1000 \
+        'gforth examples/testsuite.f' \
+        'forthrs include/std.f examples/testsuite.f'
 
 docs:
     cargo doc --no-deps --open

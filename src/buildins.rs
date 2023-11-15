@@ -15,7 +15,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("and", Callable(and)),
     ("or", Callable(or)),
     ("xor", Callable(xor)),
-    ("not", Callable(is_zero)),
+    ("invert", Callable(invert)),
     // comparisons
     ("=", Callable(eq)),
     ("<>", Callable(ne)),
@@ -272,6 +272,13 @@ fn is_zero(forth: &mut Forth) -> Result<(), Error> {
     Ok(())
 }
 
+/// `invert ( n1 -- n2 )`
+fn invert(forth: &mut Forth) -> Result<(), Error> {
+    let last = forth.stack_last_mut()?;
+    last.0 = !last.0;
+    Ok(())
+}
+
 /// `and ( n1 n2 -- n3 )`
 fn and(forth: &mut Forth) -> Result<(), Error> {
     let x = forth.stack_pop()?;
@@ -318,6 +325,7 @@ fn dup(forth: &mut Forth) -> Result<(), Error> {
 /// `pick ( ni ... n0 i -- ni ... n0 ni )`
 /// Copy i-th value to the top of the stack.
 fn pick(forth: &mut Forth) -> Result<(), Error> {
+    // FIXME
     let index = usize::from(forth.stack_pop()?);
     let n = forth.stack_len();
     if n <= index {
@@ -331,6 +339,7 @@ fn pick(forth: &mut Forth) -> Result<(), Error> {
 /// `roll ( ni ... n0 i -- ni-1 ... n0 ni )`
 /// Move i-th value to the top of the stack.
 fn roll(forth: &mut Forth) -> Result<(), Error> {
+    // FIXME
     let index = usize::from(forth.stack_pop()?);
     let n = forth.stack_len();
     if n <= index {
@@ -575,6 +584,7 @@ fn leave(_: &mut Forth) -> Result<(), Error> {
 /// `recurse ( -- )`
 /// Recurse back to the definition of the function.
 fn recurse(_: &mut Forth) -> Result<(), Error> {
+    // FIXME
     Err(Recurse)
 }
 
