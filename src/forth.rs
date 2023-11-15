@@ -62,22 +62,40 @@ impl Forth {
 
     /// Push value to the stack.
     #[inline]
-    pub(crate) fn push(&mut self, value: Int) {
+    pub(crate) fn stack_push(&mut self, value: Int) {
         self.data_stack.push(value)
     }
 
     /// Pop value from the stack.
     #[inline]
-    pub(crate) fn pop(&mut self) -> Result<Int, Error> {
+    pub(crate) fn stack_pop(&mut self) -> Result<Int, Error> {
         self.data_stack.pop().ok_or(StackUnderflow)
     }
 
     /// Pop two values from the stack, return them in the order they were entered into the stack.
     #[inline]
-    pub(crate) fn pop2(&mut self) -> Result<(Int, Int), Error> {
-        let b = self.pop()?;
-        let a = self.pop()?;
+    pub(crate) fn stack_pop2(&mut self) -> Result<(Int, Int), Error> {
+        let b = self.stack_pop()?;
+        let a = self.stack_pop()?;
         Ok((a, b))
+    }
+
+    /// Reference to the last value on the stack. Errors on empty stack.
+    #[inline]
+    pub(crate) fn stack_last(&mut self) -> Result<&Int, Error> {
+        self.data_stack.last().ok_or(StackUnderflow)
+    }
+
+    /// Mutable reference to the last element on the stack. Errors on empty stack.
+    #[inline]
+    pub(crate) fn stack_last_mut(&mut self) -> Result<&mut Int, Error> {
+        self.data_stack.last_mut().ok_or(StackUnderflow)
+    }
+
+    /// Number of elements in the stack.
+    #[inline]
+    pub(crate) fn stack_len(&self) -> usize {
+        self.data_stack.len()
     }
 
     /// Define a new word, return an error on redefinition.

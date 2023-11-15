@@ -64,7 +64,7 @@ impl Expr {
                 Some(compiled) => compiled.execute(forth),
                 None => {
                     if let Ok(num) = Int::from_str(word) {
-                        forth.push(num);
+                        forth.stack_push(num);
                         Ok(())
                     } else {
                         Err(UnknownWord(word.into()))
@@ -93,7 +93,7 @@ impl Expr {
                 Ok(())
             }
             IfElseThen(then, other) => {
-                if forth.pop()?.is_true() {
+                if forth.stack_pop()?.is_true() {
                     execute_many(forth, then)
                 } else {
                     execute_many(forth, other)
@@ -106,7 +106,7 @@ impl Expr {
                 Ok(())
             }
             Loop(body) => {
-                let (limit, index) = forth.pop2()?;
+                let (limit, index) = forth.stack_pop2()?;
                 for i in index.0..limit.0 {
                     forth.return_stack.push(Int(i));
                     maybe_break_loop!(execute_many(forth, body));
@@ -115,11 +115,11 @@ impl Expr {
                 Ok(())
             }
             NewConstant(name) => {
-                let value = forth.pop()?;
+                let value = forth.stack_pop()?;
                 forth.define_word(name, Value(value))
             }
             Value(val) => {
-                forth.push(*val);
+                forth.stack_push(*val);
                 Ok(())
             }
             NewVariable(name) => {
@@ -138,7 +138,7 @@ impl Expr {
                 Ok(())
             }
             ToValue(name) => {
-                let value = forth.pop()?;
+                let value = forth.stack_pop()?;
                 match forth.dictionary.get_mut(name) {
                     Some(Value(val)) => {
                         *val = value;
@@ -150,7 +150,7 @@ impl Expr {
             }
             Include(path) => forth.eval_file(path),
             Char(value) => {
-                forth.push(*value);
+                forth.stack_push(*value);
                 Ok(())
             }
             Print(string) => {

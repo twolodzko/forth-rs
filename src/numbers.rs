@@ -1,7 +1,6 @@
 use std::{
     cmp::{PartialEq, PartialOrd},
     fmt::Display,
-    ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Sub},
     str::FromStr,
 };
 
@@ -20,55 +19,6 @@ impl Int {
     #[inline]
     pub fn is_true(&self) -> bool {
         self.0 != FALSE
-    }
-
-    #[inline]
-    pub fn abs(&self) -> Self {
-        Int(self.0.abs())
-    }
-}
-
-/// Generate operation trait (`std::ops`) implementation.
-macro_rules! impl_op {
-    ( $trait:ty, $op:tt ) => {
-        impl_op!($trait, $op, $op);
-    };
-    ( $trait:ty, $op_name:tt, $op_used:tt ) => {
-        impl $trait for Int {
-            type Output = Int;
-
-            #[inline]
-            fn $op_name(self, rhs: Self) -> Self::Output {
-                Int(self.0.$op_used(rhs.0))
-            }
-        }
-    };
-}
-
-impl_op!(Add, add, saturating_add);
-impl_op!(Sub, sub, saturating_sub);
-impl_op!(Mul, mul, saturating_mul);
-impl_op!(Div, div, saturating_div);
-impl_op!(Rem, rem);
-impl_op!(BitAnd, bitand);
-impl_op!(BitOr, bitor);
-impl_op!(BitXor, bitxor);
-
-impl Neg for Int {
-    type Output = Int;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        Int(-self.0)
-    }
-}
-
-impl Not for Int {
-    type Output = Int;
-
-    #[inline]
-    fn not(self) -> Self::Output {
-        Int(if self.is_true() { FALSE } else { TRUE })
     }
 }
 

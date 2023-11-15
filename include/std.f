@@ -32,6 +32,8 @@
 : 0<  ( n1 -- flag )  0 < ;
 : >=  ( n1 n2 -- flag )  < not ;
 : <=  ( n1 n2 -- flag )  > not ;
+: min  ( n1 n2 -- min ) 2dup >r >r < if r> r> drop else r> drop r> then ;
+: max  ( n1 n2 -- max ) 2dup >r >r > if r> r> drop else r> drop r> then ;
 
 \ Conditionally exit.
 : ?exit  ( x -- )  if exit then ;
@@ -41,4 +43,6 @@
 : c@  ( addr -- char ) @ ;
 : c!  ( char addr -- ) ! ;
 : chars  ( -- ) ;
-: chars+ ( c-addr1 -- c-addr2 ) 1+ ;
+: char+ ( c-addr1 -- c-addr2 ) 1+ ;
+\ ALIGN assures proper placement of cell values. Use after C, and CHARS ALLOT.
+: align ;
