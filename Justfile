@@ -41,3 +41,6 @@ install:
 
 lines:
     @ find . -type f -name "*.rs" -not -name "test*" -exec awk '1;/#[cfg\(test\)]/{exit}' {} \; | grep . | wc -l
+
+clean:
+    rm -rf target/

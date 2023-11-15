@@ -76,19 +76,14 @@ impl Expr {
                 let func = Function(func.clone());
                 forth.define_word(name, func)
             }
-            Function(body) => {
-                let mut i = 0;
-                while i < body.len() {
-                    let obj = &body[i];
+            func @ Function(body) => {
+                for obj in body {
                     match obj.execute(forth) {
-                        Err(Recurse) => {
-                            i = 0;
-                            continue;
-                        }
+                        // FIXME
+                        Err(Recurse) => func.execute(forth)?,
                         Err(Exit) => return Ok(()),
                         other => other?,
                     }
-                    i += 1;
                 }
                 Ok(())
             }

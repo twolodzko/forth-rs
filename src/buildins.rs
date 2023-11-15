@@ -325,13 +325,12 @@ fn dup(forth: &mut Forth) -> Result<(), Error> {
 /// `pick ( ni ... n0 i -- ni ... n0 ni )`
 /// Copy i-th value to the top of the stack.
 fn pick(forth: &mut Forth) -> Result<(), Error> {
-    // FIXME
     let index = usize::from(forth.stack_pop()?);
     let n = forth.stack_len();
     if n <= index {
         return Err(StackUnderflow);
     }
-    let value = forth.data_stack.get(n - index).unwrap();
+    let value = forth.data_stack.get(n - 1 - index).unwrap();
     forth.stack_push(*value);
     Ok(())
 }
@@ -339,13 +338,12 @@ fn pick(forth: &mut Forth) -> Result<(), Error> {
 /// `roll ( ni ... n0 i -- ni-1 ... n0 ni )`
 /// Move i-th value to the top of the stack.
 fn roll(forth: &mut Forth) -> Result<(), Error> {
-    // FIXME
     let index = usize::from(forth.stack_pop()?);
     let n = forth.stack_len();
     if n <= index {
         return Err(StackUnderflow);
     }
-    let value = forth.data_stack.remove(n - index);
+    let value = forth.data_stack.remove(n - 1 - index);
     forth.stack_push(value);
     Ok(())
 }
@@ -584,7 +582,6 @@ fn leave(_: &mut Forth) -> Result<(), Error> {
 /// `recurse ( -- )`
 /// Recurse back to the definition of the function.
 fn recurse(_: &mut Forth) -> Result<(), Error> {
-    // FIXME
     Err(Recurse)
 }
 
