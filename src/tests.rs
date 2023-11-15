@@ -266,14 +266,14 @@ fn return_stack() {
         "character x"
     )]
 #[test_case(
-        "char  ",
-        &[Char(Int::from(' '))];
-        "character space"
-    )]
-#[test_case(
         "char 5",
         &[Char(Int::from('5'))];
         "character 5"
+    )]
+#[test_case(
+        "char hello",
+        &[Char(Int::from('h'))];
+        "only the first character"
     )]
 #[test_case(
         " : foo ; ",

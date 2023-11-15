@@ -181,7 +181,15 @@ impl<'a> Iterator for Parser<'a> {
             "char" => {
                 let result = match self.0.next() {
                     None => Err(ParsingError("failed to read character".into())),
-                    Some(c) => Ok(Char(Int::from(c))),
+                    Some(c) => {
+                        // ignore the rest of the word if there is any
+                        for c in &mut self.0 {
+                            if c.is_whitespace() {
+                                break;
+                            }
+                        }
+                        Ok(Char(Int::from(c)))
+                    }
                 };
                 Some(result)
             }

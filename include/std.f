@@ -13,7 +13,7 @@
 : 2dup  ( x1 x2 -- x1 x2 x1 x2 )  over over ;
 
 \ Copy lower pair over top pair
-: 2over  ( x1 x2 x3 x4  -- x1 x2 x3 x4 x1 x2)  3 pick 3 pick ;
+: 2over  ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2)  3 pick 3 pick ;
 
 \ Exchange top two cell pairs
 : 2swap  ( x1 x2 x3 x4 -- x3 x4 x1 x2 )  3 roll 3 roll ;
