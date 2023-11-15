@@ -1,4 +1,3 @@
-include include/std.f
 \ The code example from "Starting Forth" book
 
 : STAR 42 EMIT ;

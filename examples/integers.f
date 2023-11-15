@@ -1,5 +1,3 @@
-include include/std.f
-
 \ Examples from: http://www.murphywong.net/hello/simple.htm#L15
 
 : INTEGERS1     ( +n -- )
@@ -17,7 +15,8 @@ include include/std.f
    AGAIN        \ Loop back             ( +n i )
    ;            \ End definition
 
-10 INTEGERS1
+.( Version 1) CR
+10 INTEGERS1 CR
 
 : INTEGERS2 ( +n -- )
    1        \ Initialize i to 1      ( +n i=1 )
@@ -31,7 +30,8 @@ include include/std.f
    2DROP    \ Drop two items         (  )
    ;        \ End definition
 
-10 INTEGERS2
+.( Version 2) CR
+10 INTEGERS2 CR
 
 : INTEGERS3 ( +n -- )
    1        \ Initialize i to 1        ( +n i=1 )
@@ -47,4 +47,5 @@ include include/std.f
    2DROP    \ Drop two items           (  )
    ;        \ End definition
 
-10 INTEGERS3
+.( Version 3) CR
+10 INTEGERS3 CR

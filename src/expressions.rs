@@ -21,6 +21,8 @@ pub enum Expr {
     Word(String),
     /// The string that is printed,
     Print(String),
+    /// Push the character code to the stack.
+    Char(Int),
     /// A builtin function.
     Callable(fn(forth: &mut Forth) -> Result<(), Error>),
     /// Initialize a function and name it.
@@ -147,6 +149,10 @@ impl Expr {
                 }
             }
             Include(path) => forth.eval_file(path),
+            Char(value) => {
+                forth.push(*value);
+                Ok(())
+            }
             Print(string) => {
                 print!("{}", string);
                 Ok(())
@@ -188,6 +194,7 @@ impl Display for Expr {
         use Expr::*;
         let string = match self {
             Word(string) => string.into(),
+            Char(value) => format!("char {}", value),
             Print(string) => format!(".\" {}\"", string),
             Callable(obj) => format!("<func: {:?}>", &obj),
             NewFunction(name, body) => format!(": {} {} ;", name, vec_to_string(body)),

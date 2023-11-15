@@ -108,6 +108,13 @@ impl From<Int> for usize {
     }
 }
 
+impl From<char> for Int {
+    #[inline]
+    fn from(value: char) -> Self {
+        Int(value as i32)
+    }
+}
+
 impl From<Int> for char {
     #[inline]
     fn from(value: Int) -> Self {

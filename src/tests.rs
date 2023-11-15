@@ -1,6 +1,6 @@
 use crate::{
     errors::Error::{self, DivisionByZero, StackUnderflow},
-    expressions::Expr::{self, Begin, IfElseThen, Loop, NewFunction, Word},
+    expressions::Expr::{self, Begin, Char, IfElseThen, Loop, NewFunction, Word},
     forth::Forth,
     numbers::{Int, FALSE, TRUE},
     parser::Parser,
@@ -258,6 +258,21 @@ fn return_stack() {
         "hello \t\t  ",
         &[Word("hello".into())];
         "spaces after word"
+    )]
+#[test_case(
+        "char x",
+        &[Char(Int::from('x'))];
+        "character x"
+    )]
+#[test_case(
+        "char  ",
+        &[Char(Int::from(' '))];
+        "character space"
+    )]
+#[test_case(
+        "char 5",
+        &[Char(Int::from('5'))];
+        "character 5"
     )]
 #[test_case(
         " : foo ; ",

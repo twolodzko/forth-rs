@@ -19,10 +19,13 @@
 
 \ It does nothing, because memory cell size = 1
 : cells  ( -- ) ;
+: cell+ ( addr1 -- addr2 ) 1+ ;
 
 \ Print spaces.
 : space  ( -- )  32 emit ;
 : spaces  ( n -- )  0 do space loop ;
+\ puts the value for space (decimal 32) on the stack.
+: bl ( -- n ) 32 ;
 
 : 2+  ( n1 -- n2 )  2 + ;
 : 2-  ( n1 -- n2 )  2 + ;
@@ -32,3 +35,10 @@
 
 \ Conditionally exit.
 : ?exit  ( x -- )  if exit then ;
+
+\ Save character to memory.
+: c,  ( char -- ) , ;
+: c@  ( addr -- char ) @ ;
+: c!  ( char addr -- ) ! ;
+: chars  ( -- ) ;
+: chars+ ( c-addr1 -- c-addr2 ) 1+ ;

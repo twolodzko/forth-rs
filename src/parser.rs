@@ -1,6 +1,7 @@
 use crate::{
     errors::Error::{self, MissingArgument, ParsingError},
     expressions::Expr::{self, *},
+    numbers::Int,
     reader::Reader,
 };
 
@@ -177,6 +178,13 @@ impl<'a> Iterator for Parser<'a> {
                 self.next()
             }
             // strings
+            "char" => {
+                let result = match self.0.next() {
+                    None => Err(ParsingError("failed to read character".into())),
+                    Some(c) => Ok(Char(Int::from(c))),
+                };
+                Some(result)
+            }
             ".(" => match self.read_until(')') {
                 Ok(string) => {
                     print!("{}", string);

@@ -1,8 +1,16 @@
-test:
+test: lint unit-test integration-test
+
+lint:
     cargo clippy
+
+unit-test:
     cargo test
-    # cargo run -- examples/* >/dev/null
-    cargo run -- examples/hello.f examples/fizzbuzz.f >/dev/null
+
+integration-test:
+    cargo run -- \
+        include/std.f \
+        examples/* \
+        >/dev/null
 
 coverage:
     cargo tarpaulin --out Html

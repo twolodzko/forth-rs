@@ -4,11 +4,7 @@ use crate::{
     numbers::Int,
     parser::Parser,
 };
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::{BufRead, BufReader},
-};
+use std::{collections::HashMap, fs};
 
 /// The Forth interpreter that walks over the code and executes it.
 pub struct Forth {
@@ -50,12 +46,8 @@ impl Forth {
 
     /// Evaluate a file.
     pub fn eval_file(&mut self, path: &str) -> Result<(), Error> {
-        let file = File::open(path).map_err(|msg| CustomError(msg.to_string()))?;
-        let reader = BufReader::new(file);
-        for line in reader.lines() {
-            let line = line.map_err(|msg| CustomError(msg.to_string()))?;
-            self.eval_string(&line)?;
-        }
+        let script = fs::read_to_string(path).map_err(|msg| CustomError(msg.to_string()))?;
+        self.eval_string(&script)?;
         Ok(())
     }
 
