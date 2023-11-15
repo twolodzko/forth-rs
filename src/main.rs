@@ -3,7 +3,7 @@ use std::env;
 
 macro_rules! die {
     ( $msg:expr ) => {{
-        eprintln!("error: {:?}", $msg);
+        eprintln!("error: {}", $msg);
         std::process::exit(1);
     }};
 }
