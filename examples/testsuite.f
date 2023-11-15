@@ -314,6 +314,10 @@ T{ 0 1 AND -> 0 }T
 T{ 1 0 AND -> 0 }T
 T{ 1 1 AND -> 1 }T
 
+\ \ F.6.1.1720 INVERT
+\ T{ 0 INVERT -> 1 }T
+\ T{ 1 INVERT -> 0 }T
+
 \ F.6.1.0860 C,
 HERE 1 C,
 HERE 2 C,
@@ -523,5 +527,14 @@ T{ u2 -> -999 }T
 T{ -333 vd2 -> }T
 T{ u2 -> -333 }T
 T{ u1 ->  222 }T
+
+\ F.6.1.0710 ALLOT
+HERE 1 ALLOT
+HERE
+CONSTANT 2NDA
+CONSTANT 1STA
+T{ 1STA 2NDA U< -> <TRUE> }T    \ HERE MUST GROW WITH ALLOT
+T{      1STA 1+ ->   2NDA }T    \ ... BY ONE ADDRESS UNIT
+( MISSING TEST: NEGATIVE ALLOT )
 
 BYE
