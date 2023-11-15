@@ -1,7 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
 use crate::{
-    errors::Error::{self, CompileTimeWord, Exit, InvalidName, Leave, Recurse, UnknownWord},
+    errors::Error::{self, CompileTimeWord, Exit, InvalidName, Leave, UnknownWord},
     forth::Forth,
     numbers::Int,
 };
@@ -76,17 +76,10 @@ impl Expr {
                 let func = Function(func.clone());
                 forth.define_word(name, func)
             }
-            func @ Function(body) => {
-                for obj in body {
-                    match obj.execute(forth) {
-                        // FIXME
-                        Err(Recurse) => func.execute(forth)?,
-                        Err(Exit) => return Ok(()),
-                        other => other?,
-                    }
-                }
-                Ok(())
-            }
+            Function(body) => match execute_many(forth, body) {
+                Err(Exit) => Ok(()),
+                other => other,
+            },
             IfElseThen(then, other) => {
                 if forth.stack_pop()?.is_true() {
                     execute_many(forth, then)

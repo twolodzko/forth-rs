@@ -15,7 +15,6 @@ pub enum Error {
     Leave,
     Exit,
     Quit,
-    Recurse,
 }
 
 impl Display for Error {
@@ -32,7 +31,7 @@ impl Display for Error {
             MissingArgument => "argument is missing".into(),
             CustomError(msg) => msg.into(),
             ParsingError(msg) => msg.into(),
-            Exit | Quit | Leave | Recurse => unreachable!(),
+            Exit | Quit | Leave => unreachable!(),
         };
         write!(f, "{}", msg)
     }

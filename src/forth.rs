@@ -1,5 +1,5 @@
 use crate::{
-    errors::Error::{self, CustomError, Exit, Leave, Quit, Recurse, Redefined, StackUnderflow},
+    errors::Error::{self, CustomError, Exit, Leave, Quit, Redefined, StackUnderflow},
     expressions::Expr,
     numbers::Int,
     parser::Parser,
@@ -35,7 +35,7 @@ impl Forth {
         while let Some(result) = self.eval_next(&mut parser) {
             result.or_else(|err| {
                 self.data_stack.clear();
-                if err == Quit || err == Exit || err == Leave || err == Recurse {
+                if err == Quit || err == Exit || err == Leave {
                     return Ok(());
                 }
                 Err(err)

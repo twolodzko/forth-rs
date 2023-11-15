@@ -13,7 +13,6 @@ integration-test:
     cargo run -- \
         include/std.f \
         examples/chars.f \
-        examples/fact.f \
         examples/fizzbuzz.f \
         examples/hello.f \
         examples/integers.f \
