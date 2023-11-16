@@ -109,7 +109,7 @@ features are not implemented (and will not be).
 * Forth distinguishes between words that can be interpreted and compile-time words. For example, a loop can be only
   a part of a function and cannot be interpreted directly. Nothing prohibited me from having interpreted loops,
   so they work out-of-the-box in the terminal (REPL).
-* Forth internally distinguishes between signed and unsigned integers, I didn't feel the need for it, so there is no
+* Forth distinguishes between signed and unsigned integers, I didn't feel the need for it, so there is no
   notion of unsigned integers and the related methods.
 * The word `cells` is used in Forth to translate numbers to memory units. Since in this implementation, the memory is
   just an array, indexed using integers, `cells` would be an identify function so was not implemented.
