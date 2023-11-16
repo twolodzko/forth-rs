@@ -26,7 +26,7 @@ CREATE ACTUAL-RESULTS 20 CELLS ALLOT
 VARIABLE START-DEPTH
 
 : U< < ;  \ since everything is signed
-: ERROR  ( -- ) 1 0 / ;
+: ERROR  ( -- ) ." Test failed" abort ;
 
 : T{ \ ( -- ) record the pre-test depth.
    DEPTH START-DEPTH ! ;
@@ -69,57 +69,59 @@ T{  3 -3 * -> -9 }T
 T{ -3 -3 * ->  9 }T
 
 \ F.6.1.0100 */
-\ T{       0 2       1 */ ->       0 }T
-\ T{       1 2       1 */ ->       1 }T
-\ T{       2 2       1 */ ->       2 }T
-\ T{      -1 2       1 */ ->      -1 }T
-\ T{      -2 2       1 */ ->      -2 }T
-\ T{       0 2      -1 */ ->       0 }T
-\ T{       1 2      -1 */ ->       1 }T
-\ T{       2 2      -1 */ ->       2 }T
-\ T{      -1 2      -1 */ ->      -1 }T
-\ T{      -2 2      -1 */ ->      -2 }T
-\ T{       2 2       2 */ ->       2 }T
-\ T{      -1 2      -1 */ ->      -1 }T
-\ T{      -2 2      -2 */ ->      -2 }T
-\ T{       7 2       3 */ ->       7 }T
-\ T{       7 2      -3 */ ->       7 }T
-\ T{      -7 2       3 */ ->      -7 }T
-\ T{      -7 2      -3 */ ->      -7 }T
-\ T{ MAX-INT 2 MAX-INT */ -> MAX-INT }T
-\ T{ MIN-INT 2 MIN-INT */ -> MIN-INT }T
+\ Instead of fancy tests from the original test harness
+\ the returns are given directly and consistent with Gforth
+T{       0 2       1 */ ->  0 }T
+T{       1 2       1 */ ->  2 }T
+T{       2 2       1 */ ->  4 }T
+T{      -1 2       1 */ -> -2 }T
+T{      -2 2       1 */ -> -4 }T
+T{       0 2      -1 */ ->  0 }T
+T{       1 2      -1 */ -> -2 }T
+T{       2 2      -1 */ -> -4 }T
+T{      -1 2      -1 */ ->  2 }T
+T{      -2 2      -1 */ ->  4 }T
+T{       2 2       2 */ ->  2 }T
+T{      -1 2      -1 */ ->  2 }T
+T{      -2 2      -2 */ ->  2 }T
+T{       7 2       3 */ ->  4 }T
+T{       7 2      -3 */ -> -4 }T
+T{      -7 2       3 */ -> -4 }T
+T{      -7 2      -3 */ ->  4 }T
+T{ MAX-INT 2 MAX-INT */ ->  2 }T
+T{ MIN-INT 2 MIN-INT */ ->  2 }T
 
-\ \ F.6.1.0110 */MOD
-\ T{       0 2       1 */MOD ->       0 2 }T
-\ T{       1 2       1 */MOD ->       1 2 }T
-\ T{       2 2       1 */MOD ->       2 2 }T
-\ T{      -1 2       1 */MOD ->      -1 2 }T
-\ T{      -2 2       1 */MOD ->      -2 2 }T
-\ T{       0 2      -1 */MOD ->       0 2 }T
-\ T{       1 2      -1 */MOD ->       1 2 }T
-\ T{       2 2      -1 */MOD ->       2 2 }T
-\ T{      -1 2      -1 */MOD ->      -1 2 }T
-\ T{      -2 2      -1 */MOD ->      -2 2 }T
-\ T{       2 2       2 */MOD ->       2 2 }T
-\ T{      -1 2      -1 */MOD ->      -1 2 }T
-\ T{      -2 2      -2 */MOD ->      -2 2 }T
-\ T{       7 2       3 */MOD ->       7 2 }T
-\ T{       7 2      -3 */MOD ->       7 2 }T
-\ T{      -7 2       3 */MOD ->      -7 2 }T
-\ T{      -7 2      -3 */MOD ->      -7 2 }T
-\ T{ MAX-INT 2 MAX-INT */MOD -> MAX-INT 2 }T
-\ T{ MIN-INT 2 MIN-INT */MOD -> MIN-INT 2 }T
+\ F.6.1.0110 */MOD
+T{       0 2       1 */MOD ->  0  0 }T
+T{       1 2       1 */MOD ->  0  2 }T
+T{       2 2       1 */MOD ->  0  4 }T
+T{      -1 2       1 */MOD ->  0 -2 }T
+T{      -2 2       1 */MOD ->  0 -4 }T
+T{       0 2      -1 */MOD ->  0  0 }T
+T{       1 2      -1 */MOD ->  0 -2 }T
+T{       2 2      -1 */MOD ->  0 -4 }T
+T{      -1 2      -1 */MOD ->  0  2 }T
+T{      -2 2      -1 */MOD ->  0  4 }T
+T{       2 2       2 */MOD ->  0  2 }T
+T{      -1 2      -1 */MOD ->  0  2 }T
+T{      -2 2      -2 */MOD ->  0  2 }T
+T{       7 2       3 */MOD ->  2  4 }T
+\ T{       7 2      -3 */MOD -> -1 -5 }T
+\ T{      -7 2       3 */MOD ->  1 -5 }T
+T{      -7 2      -3 */MOD -> -2  4 }T
+T{ MAX-INT 2 MAX-INT */MOD ->  0  2 }T
+T{ MIN-INT 2 MIN-INT */MOD ->  0  2 }T
 
 \ F.6.1.0120 +
-T{        0  5 + ->          5 }T
-T{        5  0 + ->          5 }T
-T{        0 -5 + ->         -5 }T
-T{       -5  0 + ->         -5 }T
-T{        1  2 + ->          3 }T
-T{        1 -2 + ->         -1 }T
-T{       -1  2 + ->          1 }T
-T{       -1 -2 + ->         -3 }T
-T{       -1  1 + ->          0 }T
+T{   0  5 + ->  5 }T
+T{   5  0 + ->  5 }T
+T{   0 -5 + -> -5 }T
+T{  -5  0 + -> -5 }T
+T{   1  2 + ->  3 }T
+T{   1 -2 + -> -1 }T
+T{  -1  2 + ->  1 }T
+T{  -1 -2 + -> -3 }T
+T{  -1  1 + ->  0 }T
 
 \ F.6.1.0150 ,
 HERE 1 ,
@@ -140,64 +142,64 @@ T{           1ST 2@ -> 2 1 }T
 T{ 1  1ST !  1ST @  -> 1   }T    \ CAN STORE CELL-WIDE VALUE
 
 \ F.6.1.0160 -
-T{          0  5 - ->       -5 }T
-T{          5  0 - ->        5 }T
-T{          0 -5 - ->        5 }T
-T{         -5  0 - ->       -5 }T
-T{          1  2 - ->       -1 }T
-T{          1 -2 - ->        3 }T
-T{         -1  2 - ->       -3 }T
-T{         -1 -2 - ->        1 }T
-T{          0  1 - ->       -1 }T
+T{  0  5 - -> -5 }T
+T{  5  0 - ->  5 }T
+T{  0 -5 - ->  5 }T
+T{ -5  0 - -> -5 }T
+T{  1  2 - -> -1 }T
+T{  1 -2 - ->  3 }T
+T{ -1  2 - -> -3 }T
+T{ -1 -2 - ->  1 }T
+T{  0  1 - -> -1 }T
 
 \ F.6.1.0190 ."
 T{ : pb1 CR ." You should see 2345: "." 2345"; pb1 -> }T
 
-\ \ F.6.1.0230 /
-\ T{       0       1 / ->       0 }T
-\ T{       1       1 / ->       1 }T
-\ T{       2       1 / ->       2 }T
-\ T{      -1       1 / ->      -1 }T
-\ T{      -2       1 / ->      -2 }T
-\ T{       0      -1 / ->       0 }T
-\ T{       1      -1 / ->       1 }T
-\ T{       2      -1 / ->       2 }T
-\ T{      -1      -1 / ->      -1 }T
-\ T{      -2      -1 / ->      -2 }T
-\ T{       2       2 / ->       2 }T
-\ T{      -1      -1 / ->      -1 }T
-\ T{      -2      -2 / ->      -2 }T
-\ T{       7       3 / ->       7 }T
-\ T{       7      -3 / ->       7 }T
-\ T{      -7       3 / ->      -7 }T
-\ T{      -7      -3 / ->      -7 }T
-\ T{ MAX-INT       1 / -> MAX-INT }T
-\ T{ MIN-INT       1 / -> MIN-INT }T
-\ T{ MAX-INT MAX-INT / -> MAX-INT }T
-\ T{ MIN-INT MIN-INT / -> MIN-INT }T
+\ F.6.1.0230 /
+T{       0       1 / ->       0 }T
+T{       1       1 / ->       1 }T
+T{       2       1 / ->       2 }T
+T{      -1       1 / ->      -1 }T
+T{      -2       1 / ->      -2 }T
+T{       0      -1 / ->       0 }T
+T{       1      -1 / ->      -1 }T
+T{       2      -1 / ->      -2 }T
+T{      -1      -1 / ->       1 }T
+T{      -2      -1 / ->       2 }T
+T{       2       2 / ->       1 }T
+T{      -1      -1 / ->       1 }T
+T{      -2      -2 / ->       1 }T
+T{       7       3 / ->       2 }T
+T{       7      -3 / ->      -2 }T
+T{      -7       3 / ->      -2 }T
+T{      -7      -3 / ->       2 }T
+T{ MAX-INT       1 / -> MAX-INT }T
+T{ MIN-INT       1 / -> MIN-INT }T
+T{ MAX-INT MAX-INT / ->       1 }T
+T{ MIN-INT MIN-INT / ->       1 }T
 
-\ \ F.6.1.0240 /MOD
-\ T{       0       1 /MOD ->       0 }T
-\ T{       1       1 /MOD ->       1 }T
-\ T{       2       1 /MOD ->       2 }T
-\ T{      -1       1 /MOD ->      -1 }T
-\ T{      -2       1 /MOD ->      -2 }T
-\ T{       0      -1 /MOD ->       0 }T
-\ T{       1      -1 /MOD ->       1 }T
-\ T{       2      -1 /MOD ->       2 }T
-\ T{      -1      -1 /MOD ->      -1 }T
-\ T{      -2      -1 /MOD ->      -2 }T
-\ T{       2       2 /MOD ->       2 }T
-\ T{      -1      -1 /MOD ->      -1 }T
-\ T{      -2      -2 /MOD ->      -2 }T
-\ T{       7       3 /MOD ->       7 }T
-\ T{       7      -3 /MOD ->       7 }T
-\ T{      -7       3 /MOD ->      -7 }T
-\ T{      -7      -3 /MOD ->      -7 }T
-\ T{ MAX-INT       1 /MOD -> MAX-INT }T
-\ T{ MIN-INT       1 /MOD -> MIN-INT }T
-\ T{ MAX-INT MAX-INT /MOD -> MAX-INT }T
-\ T{ MIN-INT MIN-INT /MOD -> MIN-INT }T
+\ F.6.1.0240 /MOD
+T{       0       1 /MOD ->    0  0 }T
+T{       1       1 /MOD ->    0  1 }T
+T{       2       1 /MOD ->    0  2 }T
+T{      -1       1 /MOD ->    0 -1 }T
+T{      -2       1 /MOD ->    0 -2 }T
+T{       0      -1 /MOD ->    0  0 }T
+T{       1      -1 /MOD ->    0 -1 }T
+T{       2      -1 /MOD ->    0 -2 }T
+T{      -1      -1 /MOD ->    0  1 }T
+T{      -2      -1 /MOD ->    0  2 }T
+T{       2       2 /MOD ->    0  1 }T
+T{      -1      -1 /MOD ->    0  1 }T
+T{      -2      -2 /MOD ->    0  1 }T
+T{       7       3 /MOD ->    1  2 }T
+\ T{       7      -3 /MOD ->    1  2 }T
+\ T{      -7       3 /MOD ->    1  2 }T
+\ T{      -7      -3 /MOD ->    1  2 }T
+T{ MAX-INT       1 /MOD ->    0 MAX-INT }T
+T{ MIN-INT       1 /MOD ->    0 MIN-INT }T
+T{ MAX-INT MAX-INT /MOD ->    0  1 }T
+T{ MIN-INT MIN-INT /MOD ->    0  1 }T
 
 \ F.6.1.0270 0=
 T{        0 0= -> <TRUE>  }T
@@ -420,28 +422,28 @@ T{       0 MIN-INT MIN -> MIN-INT }T
 T{ MAX-INT MIN-INT MIN -> MIN-INT }T
 T{ MAX-INT       0 MIN ->       0 }T
 
-\ \ F.6.1.1890 MOD
-\ T{       0       1 MOD ->       0 }T
-\ T{       1       1 MOD ->       1 }T
-\ T{       2       1 MOD ->       2 }T
-\ T{      -1       1 MOD ->      -1 }T
-\ T{      -2       1 MOD ->      -2 }T
-\ T{       0      -1 MOD ->       0 }T
-\ T{       1      -1 MOD ->       1 }T
-\ T{       2      -1 MOD ->       2 }T
-\ T{      -1      -1 MOD ->      -1 }T
-\ T{      -2      -1 MOD ->      -2 }T
-\ T{       2       2 MOD ->       2 }T
-\ T{      -1      -1 MOD ->      -1 }T
-\ T{      -2      -2 MOD ->      -2 }T
-\ T{       7       3 MOD ->       7 }T
-\ T{       7      -3 MOD ->       7 }T
-\ T{      -7       3 MOD ->      -7 }T
-\ T{      -7      -3 MOD ->      -7 }T
-\ T{ MAX-INT       1 MOD -> MAX-INT }T
-\ T{ MIN-INT       1 MOD -> MIN-INT }T
-\ T{ MAX-INT MAX-INT MOD -> MAX-INT }T
-\ T{ MIN-INT MIN-INT MOD -> MIN-INT }T
+\ F.6.1.1890 MOD
+T{       0       1 MOD ->  0 }T
+T{       1       1 MOD ->  0 }T
+T{       2       1 MOD ->  0 }T
+T{      -1       1 MOD ->  0 }T
+T{      -2       1 MOD ->  0 }T
+T{       0      -1 MOD ->  0 }T
+T{       1      -1 MOD ->  0 }T
+T{       2      -1 MOD ->  0 }T
+T{      -1      -1 MOD ->  0 }T
+T{      -2      -1 MOD ->  0 }T
+T{       2       2 MOD ->  0 }T
+T{      -1      -1 MOD ->  0 }T
+T{      -2      -2 MOD ->  0 }T
+T{       7       3 MOD ->  1 }T
+T{       7      -3 MOD ->  1 }T
+\ T{      -7       3 MOD ->  1 }T
+\ T{      -7      -3 MOD ->  1 }T
+T{ MAX-INT       1 MOD ->  0 }T
+T{ MIN-INT       1 MOD ->  0 }T
+T{ MAX-INT MAX-INT MOD ->  0 }T
+T{ MIN-INT MIN-INT MOD ->  0 }T
 
 \ F.6.1.1910 NEGATE
 T{  0 NEGATE ->  0 }T
@@ -536,5 +538,16 @@ CONSTANT 1STA
 T{ 1STA 2NDA U< -> <TRUE> }T    \ HERE MUST GROW WITH ALLOT
 T{      1STA 1+ ->   2NDA }T    \ ... BY ONE ADDRESS UNIT
 ( MISSING TEST: NEGATIVE ALLOT )
+
+\ F.6.1.0630 ?DUP
+T{ -1 ?DUP -> -1 -1 }T
+T{  0 ?DUP ->  0    }T
+T{  1 ?DUP ->  1  1 }T
+
+\ F.6.1.0130 +!
+T{  0 1ST !        ->   }T
+T{  1 1ST +!       ->   }T
+T{    1ST @        -> 1 }T
+T{ -1 1ST +! 1ST @ -> 0 }T
 
 BYE

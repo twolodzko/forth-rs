@@ -1,5 +1,7 @@
 use crate::{
-    errors::Error::{self, DivisionByZero, Exit, InvalidAddress, Leave, Quit, StackUnderflow},
+    errors::Error::{
+        self, Abort, DivisionByZero, Exit, InvalidAddress, Leave, Quit, StackUnderflow,
+    },
     expressions::Expr::{self, Callable, Dummy, Value},
     forth::Forth,
     numbers::{Int, FALSE, TRUE},
@@ -92,6 +94,7 @@ const BUILDINS: &[(&str, Expr)] = &[
     ("exit", Callable(exit)),
     ("quit", Callable(quit)),
     ("leave", Callable(leave)),
+    ("abort", Callable(abort)),
 ];
 
 impl Forth {
@@ -587,4 +590,11 @@ fn exit(_: &mut Forth) -> Result<(), Error> {
 fn quit(forth: &mut Forth) -> Result<(), Error> {
     forth.return_stack.clear();
     Err(Quit)
+}
+
+/// `abort ( -- )`
+/// Exit with an error.
+fn abort(forth: &mut Forth) -> Result<(), Error> {
+    forth.return_stack.clear();
+    Err(Abort)
 }

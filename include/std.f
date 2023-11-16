@@ -25,12 +25,13 @@
 \ Print spaces.
 : space  ( -- )  32 emit ;
 : spaces  ( n -- )  0 do space loop ;
-\ puts the value for space (decimal 32) on the stack.
+\ Space (decimal 32)
 : bl ( -- n ) 32 ;
 
 : 2+  ( n1 -- n2 )  2 + ;
 : 2-  ( n1 -- n2 )  2 + ;
 : 0<  ( n1 -- flag )  0 < ;
+: 0>  ( n1 -- flag )  0 > ;
 : >=  ( n1 n2 -- flag )  < not ;
 : <=  ( n1 n2 -- flag )  > not ;
 : min  ( n1 n2 -- min ) 2dup < if drop else nip then ;
@@ -38,6 +39,7 @@
 
 \ Conditionally exit.
 : ?exit  ( x -- )  if exit then ;
+: ?dup  ( n -- n n ) dup if dup then ;
 
 \ Save character to memory.
 : c,  ( char -- ) , ;
@@ -52,3 +54,6 @@
 : 2@  ( addr -- x1 x2 ) DUP CELL+ @ SWAP @ ;
 
 : not  ( n1 -- n2 ) 0= ;
+
+\ Add n to the value at addr
+: +!  ( n addr -- ) swap over @ + swap ! ;
