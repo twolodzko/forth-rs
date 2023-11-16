@@ -1,4 +1,4 @@
-test: lint unit-test integration-test
+test: lint unit-test examples
 
 lint:
     cargo clippy
@@ -6,20 +6,8 @@ lint:
 unit-test:
     cargo test
 
-integration-test:
-    cargo run -- \
-        include/std.f \
-        examples/testsuite.f >/dev/null
-    cargo run -- \
-        include/std.f \
-        examples/chars.f \
-        examples/fizzbuzz.f \
-        examples/hello.f \
-        examples/integers.f \
-        examples/leap.f \
-        examples/pascal.f \
-        examples/stars.f \
-        >/dev/null
+examples:
+    cargo run -- include/std.f examples/* >/dev/null
 
 coverage:
     cargo tarpaulin --out Html

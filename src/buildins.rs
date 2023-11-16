@@ -275,7 +275,7 @@ fn is_zero(forth: &mut Forth) -> Result<(), Error> {
 /// `invert ( n1 -- n2 )`
 fn invert(forth: &mut Forth) -> Result<(), Error> {
     let last = forth.stack_last_mut()?;
-    last.0 = !last.0;
+    last.0 ^= -1;
     Ok(())
 }
 

@@ -7,6 +7,15 @@ use crate::{
 };
 use test_case::test_case;
 
+#[test]
+fn forth_test_suite() {
+    // Run the standard Forth test suite (with adaptations)
+    // See: https://forth-standard.org/standard/testsuite
+    let mut forth = Forth::new(10);
+    assert!(forth.eval_file("include/std.f").is_ok());
+    assert!(forth.eval_file("include/testsuite.f").is_ok());
+}
+
 #[test_case("0", &[], &[0]; "zero")]
 #[test_case("42", &[], &[42]; "number")]
 #[test_case("true", &[], &[-1]; "true word")]

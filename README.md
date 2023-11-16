@@ -101,6 +101,9 @@ If you break the rules, unexpected things may happen, but they are not enforced 
 
 ## Inconsistencies with Forth
 
+In general, the implementation passes the [standard Forth test suite], with the exception that some of the 
+features are not implemented (and will not be).
+
 * Forth used linked lists, memory addresses, etc. All of them are replaced with modern, Rust data structures, as
   mentioned above.
 * Forth distinguishes between words that can be interpreted and compile-time words. For example, a loop can be only
@@ -111,6 +114,10 @@ If you break the rules, unexpected things may happen, but they are not enforced 
 * The word `cells` is used in Forth to translate numbers to memory units. Since in this implementation, the memory is
   just an array, indexed using integers, `cells` would be an identify function so was not implemented.
 * Only a subset of features is implemented. For example, there are no utilities for string manipulations.
+* `INVERT` is defined as `-1 XOR`, the same as in Gforth, but other than required by the [standard Forth test suite].
+* There are some differences between Gforth and the Forth test suite and this implementation in the results
+  returned by some arithmetic operations. It uses Rust's built-in operators and they can differ in how they round
+  the results (division and modulo in particular).
 
 
  [Forth]: https://en.wikipedia.org/wiki/Forth_(programming_language)
@@ -130,3 +137,4 @@ If you break the rules, unexpected things may happen, but they are not enforced 
  [rules for using the return stack]: http://www.murphywong.net/hello/simple.htm#L20
  [`std::collections::HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
  [Gforth]: https://www.gnu.org/software/gforth/
+ [standard Forth test suite]: https://forth-standard.org/standard/testsuite
