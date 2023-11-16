@@ -2,11 +2,13 @@ pub type Int = i32;
 pub const TRUE: i32 = -1;
 pub const FALSE: i32 = 0;
 
+/// Is the value true-ish.
 #[inline]
 pub fn is_true(value: Int) -> bool {
     value != FALSE
 }
 
+/// Transform `bool` to `Int`.
 #[inline]
 pub fn from_bool(value: bool) -> Int {
     if value {
@@ -16,6 +18,7 @@ pub fn from_bool(value: bool) -> Int {
     }
 }
 
+/// Return character for the numerical code, if not possible show the replacement character.
 #[inline]
 pub fn to_char(value: Int) -> char {
     if let Ok(u) = value.try_into() {

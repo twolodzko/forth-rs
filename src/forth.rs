@@ -35,6 +35,7 @@ impl Forth {
         while let Some(result) = self.eval_next(&mut parser) {
             result.or_else(|err| {
                 self.data_stack.clear();
+                // those are just early exit statuses
                 if err == Quit || err == Exit || err == Leave {
                     return Ok(());
                 }
@@ -113,7 +114,7 @@ impl Forth {
         self.dictionary.get(name).cloned()
     }
 
-    /// The list of all the defined words.
+    /// The list of all the words in the dictionary.
     #[inline]
     pub(crate) fn words(&self) -> Vec<String> {
         let mut words = self.dictionary.keys().map(|s| s.into()).collect::<Vec<_>>();

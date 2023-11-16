@@ -18,16 +18,13 @@
 \ Exchange top two cell pairs
 : 2swap  ( x1 x2 x3 x4 -- x3 x4 x1 x2 )  3 roll 3 roll ;
 
-\ It does nothing, because memory cell size = 1
-: cells  ( -- ) ;
-: cell+ ( addr1 -- addr2 ) 1+ ;
-
 \ Print spaces.
 : space  ( -- )  32 emit ;
 : spaces  ( n -- )  0 do space loop ;
 \ Space (decimal 32)
 : bl ( -- n ) 32 ;
 
+: not  ( n1 -- n2 ) 0= ;
 : 2+  ( n1 -- n2 )  2 + ;
 : 2-  ( n1 -- n2 )  2 + ;
 : 0<  ( n1 -- flag )  0 < ;
@@ -39,8 +36,15 @@
 
 \ Conditionally exit.
 : ?exit  ( x -- )  if exit then ;
+\ Conditionally duplicate.
 : ?dup  ( n -- n n ) dup if dup then ;
 
+\ It does nothing, because memory cell size = 1
+: cells  ( -- ) ;
+: cell+ ( addr1 -- addr2 ) 1+ ;
+
+\ The methods for characters are aliases to regular methods because the implementation
+\ does not store characters differently than other data.
 \ Save character to memory.
 : c,  ( char -- ) , ;
 : c@  ( addr -- char ) @ ;
@@ -52,8 +56,6 @@
 
 : 2!  ( x1 x2 addr -- ) SWAP OVER ! CELL+ ! ;
 : 2@  ( addr -- x1 x2 ) DUP CELL+ @ SWAP @ ;
-
-: not  ( n1 -- n2 ) 0= ;
 
 \ Add n to the value at addr
 : +!  ( n addr -- ) swap over @ + swap ! ;

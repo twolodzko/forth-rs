@@ -5,9 +5,11 @@ use crate::{
     reader::Reader,
 };
 
+/// The parser that can read the code.
 pub struct Parser<'a>(Reader<'a>);
 
 impl<'a> Parser<'a> {
+    /// Skip whitespaces until any non-whitespace character. Do not pop the character.
     #[inline]
     fn skip_whitespaces(&mut self) {
         while let Some(c) = self.0.peek() {
@@ -18,6 +20,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Read all the characters until the `delimiter` (exclusive).
     #[inline]
     pub fn read_until(&mut self, delimiter: char) -> Result<String, Error> {
         let reader = &mut self.0;
@@ -31,6 +34,7 @@ impl<'a> Parser<'a> {
         Err(ParsingError(format!("missing '{}'", delimiter)))
     }
 
+    /// Read all the characters until a whitespace (exclusive).
     #[inline]
     fn read_word(&mut self) -> String {
         let reader = &mut self.0;
@@ -40,6 +44,7 @@ impl<'a> Parser<'a> {
             .collect()
     }
 
+    /// Read the function delimited by `: ... ;`.
     #[inline]
     fn read_function(&mut self) -> Result<Expr, Error> {
         // : <name> <body...> ;
@@ -65,6 +70,7 @@ impl<'a> Parser<'a> {
         Err(ParsingError("missing ';'".into()))
     }
 
+    /// Read the `if ... [else ...] then` block
     #[inline]
     fn read_iet(&mut self) -> Result<Expr, Error> {
         // if <then...> then
@@ -94,6 +100,7 @@ impl<'a> Parser<'a> {
         Err(ParsingError("missing 'then'".into()))
     }
 
+    /// Read the `begin ... again | until | repeat` block.
     #[inline]
     fn read_begin(&mut self) -> Result<Expr, Error> {
         // begin <body...> again
@@ -122,6 +129,7 @@ impl<'a> Parser<'a> {
         ))
     }
 
+    /// Read the `do ... loop` block.
     #[inline]
     fn read_loop(&mut self) -> Result<Expr, Error> {
         // do ... loop
@@ -141,6 +149,7 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// Parse the keyword with one argument form.
 macro_rules! single_arg {
     ( $self:ident, $type:expr ) => {{
         let word = $self.read_word();
@@ -182,7 +191,7 @@ impl<'a> Iterator for Parser<'a> {
                 let result = match self.0.next() {
                     None => Err(ParsingError("failed to read character".into())),
                     Some(c) => {
-                        // ignore the rest of the word if there is any
+                        // ignore the rest of the word if there is any, this is how Forth behaves
                         for c in &mut self.0 {
                             if c.is_whitespace() {
                                 break;
@@ -231,7 +240,7 @@ impl<'a> Iterator for Parser<'a> {
             "see" => {
                 single_arg!(self, See)
             }
-            // other words
+            // regular words
             word => Some(Ok(Word(word.into()))),
         }
     }

@@ -15,17 +15,19 @@
 
 \ The harness was simplified and adapted to work with this implementation.
 
+\ Some constants for the tests.
 2147483647 CONSTANT MAX-INT
 -2147483648 CONSTANT MIN-INT
 MAX-INT CONSTANT MAX-UINT
 -1 CONSTANT <TRUE>
 0 CONSTANT <FALSE>
 
+\ Throw this on any test failure.
+: ERROR  ( -- ) ." Test failed" abort ;
+
 VARIABLE ACTUAL-DEPTH \ stack record
 CREATE ACTUAL-RESULTS 20 CELLS ALLOT
 VARIABLE START-DEPTH
-
-: ERROR  ( -- ) ." Test failed" abort ;
 
 : T{ \ ( -- ) record the pre-test depth.
    DEPTH START-DEPTH ! ;

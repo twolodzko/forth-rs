@@ -273,6 +273,7 @@ fn is_zero(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `invert ( n1 -- n2 )`
+/// Calculates `n1 -1 xor`.
 fn invert(forth: &mut Forth) -> Result<(), Error> {
     let last = forth.stack_last_mut()?;
     *last ^= -1;
@@ -557,6 +558,7 @@ pub fn copy_from_return(forth: &mut Forth) -> Result<(), Error> {
 }
 
 /// `j ( -- n )`
+/// Current index of the outer loop.
 fn loop_j(forth: &mut Forth) -> Result<(), Error> {
     if forth.return_stack.len() < 2 {
         return Err(StackUnderflow);
