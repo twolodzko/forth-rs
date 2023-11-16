@@ -8,7 +8,7 @@ use crate::{
 use test_case::test_case;
 
 #[test]
-fn forth_test_suite() {
+fn standard_tests() {
     // Run the standard Forth test suite (with adaptations)
     // See: https://forth-standard.org/standard/testsuite
     let mut forth = Forth::new(10);
@@ -91,8 +91,8 @@ fn forth_test_suite() {
 #[test_case("do i loop", &[5, 0], &[0, 1, 2, 3, 4]; "do loop")]
 #[test_case("3 0 do 2 0 do j i loop loop", &[], &[0, 0, 0, 1, 1, 0, 1, 1, 2, 0, 2, 1]; "nested do loop")]
 fn eval_string(word: &str, init_stack: &[i32], expected_stack: &[i32]) {
-    let expected_stack = expected_stack.iter().map(|x| Int(*x)).collect::<Vec<_>>();
-    let init_stack = init_stack.iter().map(|x| Int(*x)).collect::<Vec<_>>();
+    let expected_stack = expected_stack.to_vec();
+    let init_stack = init_stack.to_vec();
 
     let mut forth = Forth::new(10);
     forth.data_stack = init_stack;
@@ -158,7 +158,7 @@ fn underflow_for_empty_stack(word: &str) {
 #[test_case("!"; "set variable")]
 fn underflow_for_one_value_on_stack(word: &str) {
     let mut forth = Forth::new(10);
-    forth.data_stack = vec![Int(1)];
+    forth.data_stack = vec![1];
     assert_eq!(forth.eval_string(word), Err(StackUnderflow),);
 }
 
@@ -168,7 +168,7 @@ fn underflow_for_one_value_on_stack(word: &str) {
 #[test_case("2 roll"; "roll")]
 fn underflow_for_two_value_on_stack(word: &str) {
     let mut forth = Forth::new(10);
-    forth.data_stack = vec![Int(1), Int(2)];
+    forth.data_stack = vec![1, 2];
     assert_eq!(forth.eval_string(word), Err(StackUnderflow),);
 }
 
@@ -197,11 +197,11 @@ fn constants() {
 
     assert!(forth.get_word("x").is_none());
     assert!(forth.eval_string("42 constant x").is_ok());
-    assert_eq!(Some(Value(Int(42))), forth.get_word("x"));
+    assert_eq!(Some(Value(42)), forth.get_word("x"));
 
     assert!(forth.get_word("y").is_none());
     assert!(forth.eval_string("123 constant y").is_ok());
-    assert_eq!(Some(Value(Int(123))), forth.get_word("y"));
+    assert_eq!(Some(Value(123)), forth.get_word("y"));
 
     assert_eq!(
         Err(Error::Redefined("x".into())),
@@ -218,11 +218,11 @@ fn variables() {
     assert_eq!(forth.data_stack, vec![]);
     assert!(forth.eval_string("5 x !").is_ok());
     assert!(forth.eval_string("x @").is_ok());
-    assert_eq!(forth.data_stack, vec![Int(5)]);
+    assert_eq!(forth.data_stack, vec![5]);
 
     assert!(forth.eval_string("7 x !").is_ok());
     assert!(forth.eval_string("x @").is_ok());
-    assert_eq!(forth.data_stack, vec![Int(5), Int(7)]);
+    assert_eq!(forth.data_stack, vec![5, 7]);
 
     assert!(forth.eval_string("17 y !").is_err());
 }
@@ -233,14 +233,14 @@ fn return_stack() {
 
     assert!(forth.eval_string("42 >r").is_ok());
     assert_eq!(forth.data_stack, &[]);
-    assert_eq!(forth.return_stack, &[Int(42)]);
+    assert_eq!(forth.return_stack, &[42]);
 
     assert!(forth.eval_string("r@").is_ok());
-    assert_eq!(forth.data_stack, &[Int(42)]);
-    assert_eq!(forth.return_stack, &[Int(42)]);
+    assert_eq!(forth.data_stack, &[42]);
+    assert_eq!(forth.return_stack, &[42]);
 
     assert!(forth.eval_string("r>").is_ok());
-    assert_eq!(forth.data_stack, &[Int(42), Int(42)]);
+    assert_eq!(forth.data_stack, &[42, 42]);
     assert_eq!(forth.return_stack, &[]);
 }
 
@@ -271,17 +271,17 @@ fn return_stack() {
     )]
 #[test_case(
         "char x",
-        &[Char(Int::from('x'))];
+        &[Char('x' as Int)];
         "character x"
     )]
 #[test_case(
         "char 5",
-        &[Char(Int::from('5'))];
+        &[Char('5' as Int)];
         "character 5"
     )]
 #[test_case(
         "char hello",
-        &[Char(Int::from('h'))];
+        &[Char('h' as Int)];
         "only the first character"
     )]
 #[test_case(

@@ -3,7 +3,7 @@ use std::{fmt::Display, str::FromStr};
 use crate::{
     errors::Error::{self, CompileTimeWord, Exit, InvalidName, Leave, UnknownWord},
     forth::Forth,
-    numbers::Int,
+    numbers::{is_true, Int},
 };
 
 macro_rules! maybe_break_loop {
@@ -81,7 +81,7 @@ impl Expr {
                 other => other,
             },
             IfElseThen(then, other) => {
-                if forth.stack_pop()?.is_true() {
+                if is_true(forth.stack_pop()?) {
                     execute_many(forth, then)
                 } else {
                     execute_many(forth, other)
@@ -95,8 +95,8 @@ impl Expr {
             }
             Loop(body) => {
                 let (limit, index) = forth.stack_pop2()?;
-                for i in index.0..limit.0 {
-                    forth.return_stack.push(Int(i));
+                for i in index..limit {
+                    forth.return_stack.push(i);
                     maybe_break_loop!(execute_many(forth, body));
                     forth.return_stack.pop();
                 }
@@ -111,14 +111,14 @@ impl Expr {
                 Ok(())
             }
             NewVariable(name) => {
-                forth.memory.push(Int(0));
+                forth.memory.push(0);
                 let addr = forth.memory.len() - 1;
-                forth.define_word(name, Value(Int::from(addr)))?;
+                forth.define_word(name, Value(addr as Int))?;
                 Ok(())
             }
             NewCreate(name) => {
                 let addr = forth.memory.len();
-                forth.define_word(name, Value(Int::from(addr)))?;
+                forth.define_word(name, Value(addr as Int))?;
                 Ok(())
             }
             NewValue(name) => {

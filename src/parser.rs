@@ -188,7 +188,7 @@ impl<'a> Iterator for Parser<'a> {
                                 break;
                             }
                         }
-                        Ok(Char(Int::from(c)))
+                        Ok(Char(c as Int))
                     }
                 };
                 Some(result)
