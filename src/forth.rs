@@ -30,8 +30,8 @@ impl Forth {
     }
 
     /// Evaluate a string.
-    pub fn eval_string(&mut self, string: &str) -> Result<(), Error> {
-        let mut parser = Parser::from(string);
+    pub fn eval_string(&mut self, code: &str) -> Result<(), Error> {
+        let mut parser = Parser::from(code);
         while let Some(result) = self.eval_next(&mut parser) {
             result.or_else(|err| {
                 self.data_stack.clear();
