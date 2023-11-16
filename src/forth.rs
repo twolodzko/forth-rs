@@ -62,13 +62,13 @@ impl Forth {
 
     /// Push value to the stack.
     #[inline]
-    pub(crate) fn stack_push(&mut self, value: Int) {
+    pub fn stack_push(&mut self, value: Int) {
         self.data_stack.push(value)
     }
 
-    /// Pop value from the stack.
+    /// Pop value from the stack. Errors on empty stack.
     #[inline]
-    pub(crate) fn stack_pop(&mut self) -> Result<Int, Error> {
+    pub fn stack_pop(&mut self) -> Result<Int, Error> {
         self.data_stack.pop().ok_or(StackUnderflow)
     }
 
@@ -82,7 +82,7 @@ impl Forth {
 
     /// Reference to the last value on the stack. Errors on empty stack.
     #[inline]
-    pub(crate) fn stack_last(&mut self) -> Result<&Int, Error> {
+    pub fn stack_last(&mut self) -> Result<&Int, Error> {
         self.data_stack.last().ok_or(StackUnderflow)
     }
 
@@ -94,7 +94,7 @@ impl Forth {
 
     /// Number of elements in the stack.
     #[inline]
-    pub(crate) fn stack_len(&self) -> usize {
+    pub fn stack_len(&self) -> usize {
         self.data_stack.len()
     }
 

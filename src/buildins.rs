@@ -575,7 +575,8 @@ fn bye(_: &mut Forth) -> Result<(), Error> {
 
 /// `leave ( -- )`
 /// Break the loop.
-fn leave(_: &mut Forth) -> Result<(), Error> {
+fn leave(forth: &mut Forth) -> Result<(), Error> {
+    forth.return_stack.clear();
     Err(Leave)
 }
 
