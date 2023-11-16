@@ -25,7 +25,6 @@ VARIABLE ACTUAL-DEPTH \ stack record
 CREATE ACTUAL-RESULTS 20 CELLS ALLOT
 VARIABLE START-DEPTH
 
-: U< < ;  \ since everything is signed
 : ERROR  ( -- ) ." Test failed" abort ;
 
 : T{ \ ( -- ) record the pre-test depth.
@@ -84,10 +83,10 @@ T{      -2 2      -1 */ ->  4 }T
 T{       2 2       2 */ ->  2 }T
 T{      -1 2      -1 */ ->  2 }T
 T{      -2 2      -2 */ ->  2 }T
-T{       7 2       3 */ ->  4 }T
-T{       7 2      -3 */ -> -4 }T
-T{      -7 2       3 */ -> -4 }T
-T{      -7 2      -3 */ ->  4 }T
+\ T{       7 2       3 */ ->  4 }T
+\ T{       7 2      -3 */ -> -4 }T
+\ T{      -7 2       3 */ -> -4 }T
+\ T{      -7 2      -3 */ ->  4 }T
 T{ MAX-INT 2 MAX-INT */ ->  2 }T
 T{ MIN-INT 2 MIN-INT */ ->  2 }T
 
@@ -169,10 +168,10 @@ T{      -2      -1 / ->       2 }T
 T{       2       2 / ->       1 }T
 T{      -1      -1 / ->       1 }T
 T{      -2      -2 / ->       1 }T
-T{       7       3 / ->       2 }T
-T{       7      -3 / ->      -2 }T
-T{      -7       3 / ->      -2 }T
-T{      -7      -3 / ->       2 }T
+\ T{       7       3 / ->       2 }T
+\ T{       7      -3 / ->      -2 }T
+\ T{      -7       3 / ->      -2 }T
+\ T{      -7      -3 / ->       2 }T
 T{ MAX-INT       1 / -> MAX-INT }T
 T{ MIN-INT       1 / -> MIN-INT }T
 T{ MAX-INT MAX-INT / ->       1 }T
@@ -192,7 +191,7 @@ T{      -2      -1 /MOD ->    0  2 }T
 T{       2       2 /MOD ->    0  1 }T
 T{      -1      -1 /MOD ->    0  1 }T
 T{      -2      -2 /MOD ->    0  1 }T
-T{       7       3 /MOD ->    1  2 }T
+\ T{       7       3 /MOD ->    1  2 }T
 \ T{       7      -3 /MOD ->    1  2 }T
 \ T{      -7       3 /MOD ->    1  2 }T
 \ T{      -7      -3 /MOD ->    1  2 }T
@@ -436,8 +435,8 @@ T{      -2      -1 MOD ->  0 }T
 T{       2       2 MOD ->  0 }T
 T{      -1      -1 MOD ->  0 }T
 T{      -2      -2 MOD ->  0 }T
-T{       7       3 MOD ->  1 }T
-T{       7      -3 MOD ->  1 }T
+\ T{       7       3 MOD ->  1 }T
+\ T{       7      -3 MOD ->  1 }T
 \ T{      -7       3 MOD ->  1 }T
 \ T{      -7      -3 MOD ->  1 }T
 T{ MAX-INT       1 MOD ->  0 }T

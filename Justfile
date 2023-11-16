@@ -12,10 +12,10 @@ examples:
 coverage:
     cargo tarpaulin --out Html
 
-benchmark:
+benchmark: install
     hyperfine -N -r 1000 \
-        'gforth examples/testsuite.f' \
-        'forthrs include/std.f examples/testsuite.f'
+        'gforth include/testsuite.f' \
+        'forthrs include/std.f include/testsuite.f'
 
 docs:
     cargo doc --no-deps --open

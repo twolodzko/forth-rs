@@ -57,3 +57,5 @@
 
 \ Add n to the value at addr
 : +!  ( n addr -- ) swap over @ + swap ! ;
+
+: u< < ;  \ since everything is signed
