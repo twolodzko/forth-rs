@@ -114,8 +114,8 @@ features are not implemented (and will not be).
 * The word `cells` is used in Forth to translate numbers to memory units. Since in this implementation, the memory is
   just an array, indexed using integers, `cells` would be an identify function so was not implemented.
 * Only a subset of features is implemented. For example, there are no utilities for string manipulations.
-* `INVERT` is defined as `-1 XOR`, the same as in Gforth, but other than required by the [standard Forth test suite].
-* There are some differences between Gforth and the Forth test suite and this implementation in the results
+* `invert` is defined as `-1 xor`, the same as in Gforth, but other than required by the standard test suite.
+* There are some differences between Gforth and the standard test suite and this implementation in the results
   returned by some arithmetic operations. It uses Rust's built-in operators and they can differ in how they round
   the results (division and modulo in particular).
 
