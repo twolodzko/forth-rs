@@ -118,6 +118,7 @@ features are not implemented (and will not be).
 * There are differences between Gforth, the standard test suite, and this implementation in the results
   returned by some arithmetic operations. Forth\.rs uses Rust's built-in operators and they can differ in how they round
   the results (division and modulo in particular).
+* Forth supports ASCII and splits words on spaces, this implementation supports UTF-8 and splits words on any whitespaces.
 
 
  [Forth]: https://en.wikipedia.org/wiki/Forth_(programming_language)
