@@ -112,7 +112,7 @@ features are not implemented (and will not be).
 * Forth distinguishes between signed and unsigned integers, I didn't feel the need for it, so there is no
   notion of unsigned integers and the related methods.
 * The word `cells` is used in Forth to translate numbers to memory units. Since in this implementation, the memory is
-  just an array, indexed using integers, `cells` would be an identify function so was not implemented.
+  just an array, indexed using integers, `cells` would be an identity function so was not implemented.
 * Only a subset of features is implemented. For example, there are no utilities for string manipulations.
 * `invert` is defined as `-1 xor`, the same as in Gforth, but other than required by the standard test suite.
 * There are differences between Gforth, the standard test suite, and this implementation in the results
